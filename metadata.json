@@ -1,0 +1,6 @@
+{
+  "name": "Vārta",
+  "description": "An ultra-premium, editorial-style Indian news reader with live Google News RSS feeds, full article rendering, and curated categories.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
