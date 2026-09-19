@@ -82,9 +82,9 @@ It isn't a thin wrapper around one API. It's a small, self-healing news pipeline
 
 <div align="center">
 
-<img src="docs/screenshots/feed-india.png" width="230" alt="India category feed" />&nbsp;&nbsp;
-<img src="docs/screenshots/full-article.png" width="230" alt="Full article reader with listen &amp; font controls" />&nbsp;&nbsp;
-<img src="docs/screenshots/search-index.png" width="230" alt="Search with recent &amp; trending topics" />
+<img src="feed-india.png" width="230" alt="India category feed" />&nbsp;&nbsp;
+<img src="full-article.png" width="230" alt="Full article reader with listen &amp; font controls" />&nbsp;&nbsp;
+<img src="search-index.png" width="230" alt="Search with recent &amp; trending topics" />
 
 *Category feed · Full-article reader with Listen and Serif/Sans font controls · Search with recent & trending topics*
 
