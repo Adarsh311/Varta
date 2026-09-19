@@ -1,6 +1,7 @@
 package com.example.ui
 
 import android.content.Intent
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -28,6 +29,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.model.NavigationTab
 import com.example.model.NewsArticle
 import com.example.model.NewsCategory
+import com.example.ui.components.NotificationSettingsDialog
 import com.example.ui.components.VartaMasthead
 import com.example.ui.screens.FeedScreen
 import com.example.ui.screens.FullArticleScreen
@@ -46,6 +48,13 @@ fun VartaAppScreen(
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+
+    val activeArticle = uiState.selectedArticle
+
+    // System Back Handler: return to Discourse Feed when in Search or Saved tab
+    BackHandler(enabled = uiState.currentTab != NavigationTab.FEED && activeArticle == null) {
+        viewModel.selectTab(NavigationTab.FEED)
+    }
 
     val onShareArticle: (NewsArticle) -> Unit = { article ->
         val sendIntent = Intent().apply {
@@ -66,8 +75,6 @@ fun VartaAppScreen(
         }
     }
 
-    val activeArticle = uiState.selectedArticle
-
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -83,10 +90,12 @@ fun VartaAppScreen(
                     density = uiState.readingDensity,
                     savedCount = savedArticles.size,
                     isRefreshing = uiState.isRefreshing,
+                    notificationsEnabled = uiState.isImportantNotificationsEnabled,
                     onRefresh = { viewModel.refreshCurrentFeed() },
                     onTabSelected = { tab -> viewModel.selectTab(tab) },
                     onToggleDensity = { viewModel.toggleReadingDensity() },
                     onToggleTheme = { viewModel.toggleTheme() },
+                    onOpenNotificationSettings = { viewModel.showNotificationSettings(true) },
                     modifier = Modifier.statusBarsPadding()
                 )
             },
@@ -124,6 +133,9 @@ fun VartaAppScreen(
                             isSearching = uiState.isSearching,
                             errorMessage = uiState.searchErrorMessage,
                             readingDensity = uiState.readingDensity,
+                            recentSearches = uiState.recentSearches,
+                            onRemoveRecentSearch = { q -> viewModel.removeRecentSearch(q) },
+                            onClearRecentSearches = { viewModel.clearRecentSearches() },
                             onArticleClick = { article -> viewModel.openArticle(article) },
                             onBookmarkToggle = onBookmarkToggleWithFeedback,
                             onShare = onShareArticle
@@ -135,11 +147,31 @@ fun VartaAppScreen(
                             readingDensity = uiState.readingDensity,
                             onArticleClick = { article -> viewModel.openArticle(article) },
                             onBookmarkToggle = onBookmarkToggleWithFeedback,
-                            onShare = onShareArticle
+                            onShare = onShareArticle,
+                            onClearAll = { viewModel.clearAllSaved() }
                         )
                     }
                 }
             }
+        }
+
+        if (uiState.showNotificationSettingsDialog) {
+            NotificationSettingsDialog(
+                isEnabled = uiState.isImportantNotificationsEnabled,
+                isDarkMode = uiState.isDarkMode,
+                onToggle = { enabled ->
+                    viewModel.setImportantNotificationsEnabled(context, enabled)
+                },
+                onToggleTheme = {
+                    viewModel.toggleTheme()
+                },
+                onSendTest = {
+                    viewModel.triggerTestImportantNotification(context)
+                },
+                onDismiss = {
+                    viewModel.showNotificationSettings(false)
+                }
+            )
         }
 
         // Butter-smooth slide & fade transition for the Full Article screen

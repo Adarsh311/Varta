@@ -32,7 +32,43 @@ class NewsRepository(
     }
 
     suspend fun getFullArticle(article: NewsArticle): ScrapedArticle {
-        return scraperService.scrapeArticle(article)
+        // 1. Check if we have offline cached paragraphs in Room database
+        val localEntity = articleDao.getArticleById(article.id)
+        if (localEntity != null) {
+            val localParagraphs = localEntity.getParagraphsList()
+            if (localParagraphs.isNotEmpty()) {
+                val highlights = localEntity.getHighlightsList()
+                return ScrapedArticle(
+                    id = localEntity.id,
+                    title = localEntity.title,
+                    source = localEntity.source,
+                    originalLink = localEntity.link,
+                    finalUrl = localEntity.finalUrl ?: localEntity.link,
+                    heroImageUrl = localEntity.imageUrl ?: article.imageUrl,
+                    author = localEntity.author,
+                    publishedDate = localEntity.pubDate,
+                    paragraphs = localParagraphs,
+                    inlineImages = emptyList(),
+                    keyHighlights = highlights,
+                    isScrapedFromWeb = true
+                )
+            }
+        }
+
+        // 2. Fetch/Scrape from web
+        val scraped = scraperService.scrapeArticle(article)
+
+        // 3. If bookmarked or already in db, cache the scraped content for offline reading
+        if (articleDao.isBookmarked(article.id)) {
+            val updatedEntity = ArticleEntity.fromScrapedArticle(article, scraped, bookmarked = true)
+            articleDao.insertOrUpdate(updatedEntity)
+        }
+
+        return scraped
+    }
+
+    suspend fun clearAllBookmarks() {
+        articleDao.deleteAllBookmarks()
     }
 
     suspend fun resolveRealHeroImage(article: NewsArticle): String? {

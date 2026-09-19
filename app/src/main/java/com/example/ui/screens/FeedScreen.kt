@@ -8,8 +8,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -22,6 +24,7 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.WifiOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -34,7 +37,9 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.model.NewsArticle
 import com.example.model.NewsCategory
 import com.example.model.ReadingDensity
@@ -155,22 +160,70 @@ fun FeedScreen(
                             )
                         }
 
-                        // Remaining Stories
                         val remainingStories = articles.drop(1)
-                        itemsIndexed(remainingStories, key = { _, item -> item.id }) { _, article ->
-                            if (readingDensity == ReadingDensity.MAGAZINE) {
-                                MagazineStoryCard(
-                                    article = article,
-                                    onClick = { onArticleClick(article) },
-                                    onBookmarkToggle = { onBookmarkToggle(article) },
-                                    onShare = { onShare(article) }
-                                )
-                            } else {
-                                CompactStoryCard(
-                                    article = article,
-                                    onClick = { onArticleClick(article) },
-                                    onBookmarkToggle = { onBookmarkToggle(article) }
-                                )
+
+                        // Remaining Stories Header
+                        if (remainingStories.isNotEmpty()) {
+                            item(key = "section_header_wire") {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text(
+                                            text = "◆ WIRE CHRONICLES & DISPATCHES",
+                                            style = MaterialTheme.typography.labelSmall.copy(
+                                                fontFamily = FontFamily.Serif,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 10.sp,
+                                                letterSpacing = 1.sp
+                                            ),
+                                            color = MaterialTheme.colorScheme.onBackground,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                            modifier = Modifier.weight(1f, fill = false)
+                                        )
+                                        Spacer(modifier = Modifier.size(6.dp))
+                                        Text(
+                                            text = "SECTION B • PAGE 2",
+                                            style = MaterialTheme.typography.labelSmall.copy(
+                                                fontFamily = FontFamily.Serif,
+                                                fontWeight = FontWeight.SemiBold,
+                                                fontSize = 8.5.sp,
+                                                letterSpacing = 0.5.sp
+                                            ),
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            maxLines = 1
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    HorizontalDivider(
+                                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                                        thickness = 1.dp
+                                    )
+                                }
+                            }
+
+                            itemsIndexed(remainingStories, key = { _, item -> item.id }) { _, article ->
+                                if (readingDensity == ReadingDensity.MAGAZINE) {
+                                    MagazineStoryCard(
+                                        article = article,
+                                        onClick = { onArticleClick(article) },
+                                        onBookmarkToggle = { onBookmarkToggle(article) },
+                                        onShare = { onShare(article) }
+                                    )
+                                } else {
+                                    CompactStoryCard(
+                                        article = article,
+                                        onClick = { onArticleClick(article) },
+                                        onBookmarkToggle = { onBookmarkToggle(article) }
+                                    )
+                                }
                             }
                         }
                     }

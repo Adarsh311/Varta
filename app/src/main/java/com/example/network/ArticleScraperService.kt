@@ -180,13 +180,21 @@ class ArticleScraperService(
         val publishedTime = DateTimeFormatterHelper.formatPublishedDate(rawDate, article.timestamp)
 
         // Clean out noise elements from document
-        doc.select("script, style, noscript, iframe, nav, header, footer, .ad, .advertisement, .ad-box, .banner, .social-share, .comments, .related, .sidebar, .menu, .popup, .newsletter, .widget").remove()
+        doc.select(
+            "script, style, noscript, iframe, nav, header, footer, " +
+            ".ad, .advertisement, .ad-box, .banner, .social-share, .comments, .related, .sidebar, .menu, .popup, .newsletter, .widget, " +
+            ".LEzX4, .PmOGb, .X422A, .kMukU, .cdatainfo, [data-type=\"in_view\"], [data-type=\"loadable-inview\"], #auhtor_widget, #affilaite_widget_carousel, " +
+            ".vdo_embedd, .TUMGW, .wdt-taboola, .dfp_ATF_wrapper, .id-r-component.br, .also-read, .author_widget, .tags-wrapper, .share-page, " +
+            ".adInv, .ATF_mobile_ads, .MebaY, .CLSPlaceholder, .comment-box, .comment_box, .react_box, .story-tags, .tags_list"
+        ).remove()
 
         // 4. Target primary article container
         val candidateContainers = listOf(
             "[itemprop=articleBody]",
             ".articlebodycontent",
             "div[class*=\"articlebodycontent\"]",
+            "div[data-articlebody]",
+            "div[class*=\"fewcent\"]",
             "div[class*=\"content-body\"]",
             "div[id*=\"content-body\"]",
             "div[class*=\"story-element-text\"]",
@@ -201,7 +209,6 @@ class ArticleScraperService(
             ".arttext",
             "div.Normal",
             "div._3YYSt",
-            "div[data-articlebody]",
             "div[class*=\"article_content\"]",
             "div.story-section",
             "#ins_storybody",
@@ -223,7 +230,7 @@ class ArticleScraperService(
         var container: Element? = null
         for (selector in candidateContainers) {
             val found = doc.select(selector).first()
-            if (found != null && found.text().length > 150) {
+            if (found != null && found.text().length > 100) {
                 container = found
                 break
             }
@@ -239,7 +246,7 @@ class ArticleScraperService(
         if (highlightElements != null) {
             for (li in highlightElements) {
                 val point = cleanParagraphText(li.text())
-                if (point.length in 35..180 && !point.contains("Also Read", ignoreCase = true)) {
+                if (point.length in 35..180 && !point.contains("Also Read", ignoreCase = true) && isQualityParagraph(point)) {
                     keyHighlights.add(point)
                     if (keyHighlights.size >= 3) break
                 }
@@ -250,7 +257,7 @@ class ArticleScraperService(
             // Replace <br> with newlines so paragraph boundaries are preserved
             container.select("br").append("\n")
 
-            val pElements = container.select("p, div.Normal, div._3YYSt, div.story-element-text")
+            val pElements = container.select("p, span[class*=\"id-r-component\"], span[data-pos], div.Normal, div._3YYSt, div.story-element-text, div.story-text, div.arttext, div.ins_storybody")
             for (p in pElements) {
                 val text = cleanParagraphText(p.text())
                 if (isQualityParagraph(text)) {
@@ -272,10 +279,10 @@ class ArticleScraperService(
         // If container was not found or yielded too few paragraphs, search whole body
         if (rawParagraphs.size < 2) {
             doc.body().select("br").append("\n")
-            val allPs = doc.body().select("p, div.Normal, div[class*=\"article_content\"] > div")
+            val allPs = doc.body().select("p, span[class*=\"id-r-component\"], span[data-pos], div.Normal, div._3YYSt, div[class*=\"article_content\"] > div")
             for (p in allPs) {
                 val text = cleanParagraphText(p.text())
-                if (isQualityParagraph(text) && text.length > 40) {
+                if (isQualityParagraph(text) && text.length > 30) {
                     rawParagraphs.add(text)
                 }
             }
@@ -299,7 +306,7 @@ class ArticleScraperService(
         if (keyHighlights.isEmpty() && formattedParagraphs.isNotEmpty()) {
             val autoHighlights = formattedParagraphs.take(3)
                 .map { it.split(". ").first().trim() }
-                .filter { it.length in 35..140 }
+                .filter { it.length in 35..140 && isQualityParagraph(it) }
             keyHighlights.addAll(autoHighlights.take(3))
         }
 
@@ -341,12 +348,16 @@ class ArticleScraperService(
     }
 
     private fun isQualityParagraph(text: String): Boolean {
-        if (text.length < 35) return false
+        if (text.length < 30) return false
         val lower = text.lowercase()
         val bannedSubstrings = listOf(
             "copyright", "all rights reserved", "subscribe now", "terms of use",
             "privacy policy", "cookie policy", "sign up for", "click here",
             "advertisement", "newsletter", "disclaimer:", "read also", "share this:",
+            "share your thoughts", "community guidelines", "toi community guidelines",
+            "join conversation", "post comment", "download the toi app", "download the app",
+            "leave a comment", "write a comment", "post a comment", "be respectful",
+            "also read:", "follow us on", "photo credit:", "terms and conditions",
             "reference #", "errors.edgesuite", "edgesuite.net", "access denied",
             "cloudflare", "ray id:", "please enable cookies", "verify you are a human",
             "turn on javascript", "web application firewall", "security check",

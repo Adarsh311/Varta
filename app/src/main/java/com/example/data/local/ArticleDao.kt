@@ -17,6 +17,9 @@ interface ArticleDao {
     @Query("SELECT id FROM articles WHERE isBookmarked = 1")
     fun getBookmarkedIds(): Flow<List<String>>
 
+    @Query("SELECT * FROM articles WHERE id = :id LIMIT 1")
+    suspend fun getArticleById(id: String): ArticleEntity?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertOrUpdate(article: ArticleEntity)
 
@@ -26,6 +29,10 @@ interface ArticleDao {
     @Query("DELETE FROM articles WHERE id = :id")
     suspend fun deleteById(id: String)
 
+    @Query("DELETE FROM articles WHERE isBookmarked = 1")
+    suspend fun deleteAllBookmarks()
+
     @Query("SELECT EXISTS(SELECT 1 FROM articles WHERE id = :id AND isBookmarked = 1)")
     suspend fun isBookmarked(id: String): Boolean
 }
+

@@ -8,6 +8,12 @@ import coil.memory.MemoryCache
 import coil.util.DebugLogger
 
 class VartaApp : Application(), ImageLoaderFactory {
+    override fun onCreate() {
+        super.onCreate()
+        com.example.util.NewsNotificationManager.createNotificationChannel(this)
+        com.example.worker.VartaBackgroundWorker.schedulePeriodicSync(this)
+    }
+
     override fun newImageLoader(): ImageLoader {
         return ImageLoader.Builder(this)
             .memoryCache {

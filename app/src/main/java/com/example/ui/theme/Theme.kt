@@ -6,40 +6,40 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 
 private val DarkColorScheme = darkColorScheme(
-    primary = VartaSaffron,
-    onPrimary = VartaCharcoalDark,
+    primary = VartaSaffronLight,
+    onPrimary = VartaPaperDark,
     primaryContainer = VartaCardElevatedDark,
     onPrimaryContainer = VartaSaffronLight,
-    secondary = VartaIvoryMuted,
-    onSecondary = VartaCharcoalDark,
-    secondaryContainer = VartaCardDark,
-    onSecondaryContainer = VartaIvory,
+    secondary = VartaInkLightMuted,
+    onSecondary = VartaPaperDark,
+    secondaryContainer = VartaPaperCardDark,
+    onSecondaryContainer = VartaInkLight,
     tertiary = VartaSaffronLight,
-    background = VartaCharcoalDark,
-    onBackground = VartaIvory,
-    surface = VartaSurfaceDark,
-    onSurface = VartaIvory,
-    surfaceVariant = VartaCardDark,
-    onSurfaceVariant = VartaIvoryMuted,
+    background = VartaPaperDark,
+    onBackground = VartaInkLight,
+    surface = VartaPaperSurfaceDark,
+    onSurface = VartaInkLight,
+    surfaceVariant = VartaPaperCardDark,
+    onSurfaceVariant = VartaInkLightMuted,
     outline = VartaHairlineDark,
     outlineVariant = VartaHairlineDark
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = VartaSaffronDeep,
-    onPrimary = VartaCreamLight,
-    primaryContainer = VartaCardLight,
-    onPrimaryContainer = VartaSaffronDeep,
+    primary = VartaSaffron,
+    onPrimary = VartaPaperLight,
+    primaryContainer = VartaPaperCardLight,
+    onPrimaryContainer = VartaInkDark,
     secondary = VartaInkMuted,
-    onSecondary = VartaCreamLight,
-    secondaryContainer = VartaCardLight,
+    onSecondary = VartaPaperLight,
+    secondaryContainer = VartaPaperCardLight,
     onSecondaryContainer = VartaInkDark,
-    tertiary = VartaSaffronDeep,
-    background = VartaCreamLight,
+    tertiary = VartaPressRed,
+    background = VartaPaperLight,
     onBackground = VartaInkDark,
-    surface = VartaSurfaceLight,
+    surface = VartaPaperSurfaceLight,
     onSurface = VartaInkDark,
-    surfaceVariant = VartaCardLight,
+    surfaceVariant = VartaPaperCardLight,
     onSurfaceVariant = VartaInkMuted,
     outline = VartaHairlineLight,
     outlineVariant = VartaHairlineLight
@@ -58,3 +58,4 @@ fun MyApplicationTheme(
         content = content
     )
 }
+

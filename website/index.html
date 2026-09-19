@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>THE VĀRTA DISPATCH (वार्ता) — Daily National & World Broadsheet</title>
+  <meta name="description" content="Authentic Indian and International Broadsheet Daily Wire, featuring real-time dispatches, audio reading edition, and archival research." />
+
+  <!-- Google Fonts: Playfair Display, Merriweather, Rozha One, Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400&family=Playfair+Display:ital,wght@0,600;0,700;0,800;0,900;1,600;1,700&family=Rozha+One&display=swap" rel="stylesheet" />
+
+  <!-- Broadsheet Styles -->
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- Main Broadsheet Paper Container -->
+  <div class="paper-wrapper" id="app-wrapper">
+
+    <!-- Grand Broadsheet Masthead Header -->
+    <header class="masthead">
+      <!-- Ears Bar -->
+      <div class="ears-bar">
+        <div class="ear-left">
+          <strong>VOL. CXVII • NO. 42</strong>
+          <span>EST. 2024 • BHARAT</span>
+        </div>
+        <div class="motto">❖ सत्यमेव जयते ❖</div>
+        <div class="ear-right">
+          <strong id="dateline-text">FRIDAY, SEPTEMBER 19, 2026</strong>
+          <span class="edition-badge">FREE PRESS EDITION</span>
+        </div>
+      </div>
+
+      <div class="rule-thin"></div>
+
+      <!-- Masthead Main Title -->
+      <div class="masthead-title-block" onclick="switchTab('feed')">
+        <div class="masthead-title">
+          THE VĀRTA DISPATCH
+          <span class="hindi-tag">वार्ता</span>
+        </div>
+        <div class="masthead-tagline">Daily Chronicle of National & International Dispatches</div>
+      </div>
+
+      <div class="rule-thick"></div>
+      <div class="rule-thin"></div>
+
+      <!-- Editorial Navigation & Utility Toolbar -->
+      <nav class="toolbar">
+        <div class="nav-sections">
+          <button class="nav-btn active" data-tab="feed">
+            DISPATCHES
+          </button>
+          <button class="nav-btn" data-tab="saved" id="saved-tab-btn">
+            SAVED<span id="saved-count-badge"></span>
+          </button>
+          <button class="nav-btn" data-tab="search">
+            INDEX / SEARCH
+          </button>
+          <a href="varta.apk" download="varta.apk" class="nav-btn apk-badge-btn" title="Download Android APK">
+            ⬇ GET ANDROID APP (.APK)
+          </a>
+        </div>
+
+        <div class="quick-tools">
+          <button class="icon-btn" id="notif-toggle-btn" title="Breaking News Notification Alerts">
+            🔔
+          </button>
+          <button class="icon-btn" id="refresh-btn" title="Refresh Press Wire">
+            🔄
+          </button>
+          <button class="icon-btn" id="density-toggle-btn" title="Toggle Broadsheet / Wire Density">
+            📰
+          </button>
+          <button class="icon-btn" id="theme-toggle-btn" title="Day / Midnight Edition">
+            🌙
+          </button>
+        </div>
+      </nav>
+
+      <div class="rule-thin"></div>
+    </header>
+
+    <!-- Category Chips Bar -->
+    <section class="categories-bar" id="categories-bar">
+      <!-- Injected via JavaScript -->
+    </section>
+
+    <!-- View: Live Feed Page -->
+    <main id="feed-container">
+      <!-- Injected via JavaScript -->
+    </main>
+
+    <!-- View: Saved / Archival Binder -->
+    <section id="saved-container" style="display: none;">
+      <!-- Injected via JavaScript -->
+    </section>
+
+    <!-- View: Index & Search -->
+    <section id="search-container" style="display: none;">
+      <div class="search-bar-container">
+        <span class="search-icon-inside">🔍</span>
+        <input type="text" id="search-input" class="search-input" placeholder="Search Indian & global dispatches by headline, topic or source..." />
+      </div>
+      <div id="search-results">
+        <!-- Injected via JavaScript -->
+      </div>
+    </section>
+
+    <!-- Broadsheet Footer -->
+    <footer class="broadsheet-footer">
+      <div class="rule-thick"></div>
+      <div style="padding: 16px 0;">
+        <p><strong>THE VĀRTA DISPATCH (वार्ता)</strong> — An Independent Broadsheet & Press Reader.</p>
+        <p style="margin-top: 4px; font-size: 11px;">Aggregating verified dispatches from Press Trust of India, The Hindu, Times of India, and Global Wires.</p>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Full Article In-Depth Broadsheet Reader Modal -->
+  <div class="reader-overlay" id="reader-modal">
+    <div class="reader-modal">
+      <div style="display:flex; justify-content:flex-end; padding:8px 16px; background:var(--bg-card); border-bottom:1px solid var(--hairline-color);">
+        <button id="close-reader-btn" class="nav-btn" style="padding:4px 10px; font-size:12px;">✕ CLOSE [ESC]</button>
+      </div>
+      <div id="reader-content" style="display:flex; flex-direction:column; overflow:hidden; flex:1;">
+        <!-- Injected via JavaScript -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Settings Modal -->
+  <div class="reader-overlay" id="notif-modal">
+    <div class="reader-modal notif-settings-modal">
+      <div class="modal-top-bar">
+        <div class="modal-title-row">
+          <span style="font-size: 18px;">🔔</span>
+          <h3>PRESS WIRE DISPATCH ALERTS</h3>
+        </div>
+        <button id="close-notif-btn" class="nav-btn" style="padding:4px 10px; font-size:12px;">✕ CLOSE</button>
+      </div>
+      
+      <div class="notif-modal-body">
+        <div class="notif-switch-row">
+          <div class="notif-info">
+            <h4>Important &amp; Breaking News Only</h4>
+            <p>Receive immediate alerts for major lead dispatches, national milestones, and breaking editorial news featuring high-resolution photography. Standard wire bulletins stay silent.</p>
+          </div>
+          <label class="switch-toggle">
+            <input type="checkbox" id="important-notif-checkbox" checked />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="notif-preview-box">
+          <span class="preview-badge">❖ RICH EDITORIAL NOTIFICATIONS</span>
+          <p>Features embedded press photojournalism, source masthead attribution, and one-tap direct dispatch reader activation.</p>
+        </div>
+
+        <div class="notif-actions">
+          <button class="nav-btn send-test-btn" id="send-test-notif-btn">
+            📨 SEND SAMPLE BREAKING NEWS ALERT (WITH IMAGE)
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Message -->
+  <div id="toast-notification" class="toast-msg"></div>
+
+  <!-- Scripts -->
+  <script src="app.js"></script>
+</body>
+</html>

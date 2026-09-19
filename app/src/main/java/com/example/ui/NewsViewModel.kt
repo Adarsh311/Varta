@@ -1,5 +1,6 @@
 package com.example.ui
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -10,6 +11,7 @@ import com.example.model.NewsCategory
 import com.example.model.ReadingDensity
 import com.example.model.ScrapedArticle
 import com.example.util.NewsImageHelper
+import com.example.util.NewsNotificationManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -36,18 +38,30 @@ data class NewsUiState(
     val searchResults: List<NewsArticle> = emptyList(),
     val isSearching: Boolean = false,
     val searchErrorMessage: String? = null,
+    val recentSearches: List<String> = listOf("ISRO Gaganyaan", "RBI Repo Rate", "Semiconductor India", "Sensex Nifty"),
+    val savedCategoryFilter: String? = null,
+    val savedSearchQuery: String = "",
     val selectedArticle: NewsArticle? = null,
     val scrapedArticle: ScrapedArticle? = null,
     val isScrapingArticle: Boolean = false,
     val readingDensity: ReadingDensity = ReadingDensity.MAGAZINE,
     val isDarkMode: Boolean = true,
+    val isImportantNotificationsEnabled: Boolean = true,
+    val showNotificationSettingsDialog: Boolean = false,
     val lastRefreshedAt: Long = System.currentTimeMillis()
 )
 
 class NewsViewModel(
-    private val repository: NewsRepository
+    private val repository: NewsRepository,
+    private val context: Context
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow(NewsUiState())
+    private val prefs = context.getSharedPreferences("varta_settings_prefs", Context.MODE_PRIVATE)
+
+    private val _uiState = MutableStateFlow(
+        NewsUiState(
+            isDarkMode = prefs.getBoolean("is_dark_mode", true)
+        )
+    )
     val uiState: StateFlow<NewsUiState> = _uiState.asStateFlow()
 
     val bookmarkedArticles: StateFlow<List<NewsArticle>> = repository.bookmarkedArticles
@@ -138,6 +152,11 @@ class NewsViewModel(
                         lastRefreshedAt = System.currentTimeMillis()
                     )
                 }
+                if (category == NewsCategory.INDIA || category == NewsCategory.TOP_STORIES) {
+                    freshArticles.firstOrNull()?.let { top ->
+                        prefs.edit().putString("last_notified_article_id", top.id).apply()
+                    }
+                }
                 resolveMissingImagesInBackground(freshArticles)
             }.onFailure { error ->
                 _uiState.update {
@@ -169,16 +188,18 @@ class NewsViewModel(
     }
 
     fun executeSearch(query: String) {
-        if (query.isBlank()) return
+        val trimmed = query.trim()
+        if (trimmed.isBlank()) return
+        addRecentSearch(trimmed)
         viewModelScope.launch {
             _uiState.update { it.copy(isSearching = true, searchErrorMessage = null) }
-            val result = repository.searchNews(query)
+            val result = repository.searchNews(trimmed)
             result.onSuccess { results ->
                 _uiState.update {
                     it.copy(
                         searchResults = results,
                         isSearching = false,
-                        searchErrorMessage = if (results.isEmpty()) "No stories found matching \"$query\"" else null
+                        searchErrorMessage = if (results.isEmpty()) "No stories found matching \"$trimmed\"" else null
                     )
                 }
                 resolveMissingImagesInBackground(results)
@@ -191,6 +212,39 @@ class NewsViewModel(
                     )
                 }
             }
+        }
+    }
+
+    fun addRecentSearch(query: String) {
+        val trimmed = query.trim()
+        if (trimmed.length < 2) return
+        _uiState.update { state ->
+            val updated = (listOf(trimmed) + state.recentSearches.filterNot { it.equals(trimmed, ignoreCase = true) }).take(8)
+            state.copy(recentSearches = updated)
+        }
+    }
+
+    fun removeRecentSearch(query: String) {
+        _uiState.update { state ->
+            state.copy(recentSearches = state.recentSearches.filterNot { it.equals(query, ignoreCase = true) })
+        }
+    }
+
+    fun clearRecentSearches() {
+        _uiState.update { it.copy(recentSearches = emptyList()) }
+    }
+
+    fun setSavedCategoryFilter(category: String?) {
+        _uiState.update { it.copy(savedCategoryFilter = category) }
+    }
+
+    fun setSavedSearchQuery(query: String) {
+        _uiState.update { it.copy(savedSearchQuery = query) }
+    }
+
+    fun clearAllSaved() {
+        viewModelScope.launch {
+            repository.clearAllBookmarks()
         }
     }
 
@@ -281,7 +335,11 @@ class NewsViewModel(
     }
 
     fun toggleTheme() {
-        _uiState.update { it.copy(isDarkMode = !it.isDarkMode) }
+        _uiState.update { state ->
+            val nextMode = !state.isDarkMode
+            prefs.edit().putBoolean("is_dark_mode", nextMode).apply()
+            state.copy(isDarkMode = nextMode)
+        }
     }
 
     private var imageEnrichJob: Job? = null
@@ -322,6 +380,69 @@ class NewsViewModel(
         }
     }
 
+    fun checkAndTriggerNewBreakingStoryNotification(context: Context) {
+        viewModelScope.launch {
+            val topArticle = _uiState.value.articles.firstOrNull() ?: return@launch
+            NewsNotificationManager.notifyIfNewBreakingStory(context, topArticle)
+        }
+    }
+
+    fun initNotificationState(context: Context) {
+        NewsNotificationManager.createNotificationChannel(context)
+        val enabled = NewsNotificationManager.isImportantNotificationsEnabled(context) &&
+                androidx.core.app.NotificationManagerCompat.from(context).areNotificationsEnabled()
+        _uiState.update { it.copy(isImportantNotificationsEnabled = enabled) }
+    }
+
+    fun setImportantNotificationsEnabled(context: Context, enabled: Boolean) {
+        NewsNotificationManager.setImportantNotificationsEnabled(context, enabled)
+        _uiState.update { it.copy(isImportantNotificationsEnabled = enabled) }
+    }
+
+    fun showNotificationSettings(show: Boolean) {
+        _uiState.update { it.copy(showNotificationSettingsDialog = show) }
+    }
+
+    fun triggerTestImportantNotification(context: Context) {
+        viewModelScope.launch {
+            val sampleArticle = _uiState.value.articles.firstOrNull() ?: NewsArticle(
+                id = "test_lead_dispatch",
+                title = "Chandrayaan & Gaganyaan: Historic Milestone Achieved in High-Altitude Flight Tests",
+                description = "ISRO achieves critical propulsion landmark with flawless cryogenic restart simulation ahead of scheduled crewed space mission.",
+                link = "https://news.google.com",
+                source = "ISRO DISPATCH",
+                pubDate = "Just now",
+                timestamp = System.currentTimeMillis(),
+                category = "science",
+                imageUrl = "https://images.unsplash.com/photo-1517976487508-8f8303d6a457?auto=format&fit=crop&w=1200&q=80"
+            )
+            NewsNotificationManager.showImportantNewsNotification(context, sampleArticle)
+        }
+    }
+
+    fun openArticleFromNotification(
+        id: String,
+        title: String,
+        link: String,
+        source: String,
+        imageUrl: String?,
+        desc: String,
+        category: String
+    ) {
+        val article = NewsArticle(
+            id = id,
+            title = title,
+            description = desc,
+            link = link,
+            source = source,
+            pubDate = "Just now",
+            timestamp = System.currentTimeMillis(),
+            category = category,
+            imageUrl = imageUrl
+        )
+        openArticle(article)
+    }
+
     private fun startSilentAutoRefresh() {
         autoRefreshJob?.cancel()
         autoRefreshJob = viewModelScope.launch {
@@ -346,11 +467,14 @@ class NewsViewModel(
     }
 }
 
-class NewsViewModelFactory(private val repository: NewsRepository) : ViewModelProvider.Factory {
+class NewsViewModelFactory(
+    private val repository: NewsRepository,
+    private val context: Context
+) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(NewsViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return NewsViewModel(repository) as T
+            return NewsViewModel(repository, context.applicationContext) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }
