@@ -6,7 +6,7 @@
 ### वार्ता — *The news, distilled.*
 
 **A native Android news reader, reborn as an editorial product.**
-Live multi-source RSS aggregation · full-article extraction · a distraction-free, newsprint-grade reading experience — plus a matching broadsheet-style companion website.
+Live multi-source RSS aggregation · full-article extraction · a bilingual English ⇄ Hindi reading experience · a distraction-free, newsprint-grade UI — plus a matching broadsheet-style companion website.
 
 <br />
 
@@ -46,7 +46,7 @@ Live multi-source RSS aggregation · full-article extraction · a distraction-fr
 
 **Vārta** (वार्ता — "discourse" or "news" in Sanskrit/Hindi) is a native Android news reader built end-to-end in **Jetpack Compose**. It pulls live headlines from multiple trusted Indian publishers in parallel, de-duplicates and merges them into a single resilient feed, then re-fetches and cleans the *full* article body — hero image, byline, publish date, and readable paragraphs — so you read a clean, ad-free, letterpress-style layout instead of a cluttered mobile website.
 
-It isn't a thin wrapper around one API. It's a small, self-healing news pipeline: if a publisher's feed goes down, gets rate-limited, or throws up a bot-detection wall, Vārta silently falls back to the next source, a JSON proxy, or a clearly-labeled editorial summary — so the feed rarely feels empty, and a broken source never breaks the UI.
+It isn't a thin wrapper around one API. It's a small, self-healing news pipeline: if a publisher's feed goes down, gets rate-limited, or throws up a bot-detection wall, Vārta silently works through a chain of fallbacks — a JSON proxy, a reader-mode proxy, or a clearly-labeled editorial summary — so the feed rarely feels empty, and a broken source never breaks the UI. Every category, search result, and full article is also available live in **Hindi**, translated on the fly rather than pre-bundled.
 
 <br />
 
@@ -56,11 +56,17 @@ It isn't a thin wrapper around one API. It's a small, self-healing news pipeline
 - **Full article extraction** — scrapes and cleans the source publisher's page (hero image, byline, date, body copy) instead of a truncated RSS snippet
 - **Two feed densities** — an immersive *Magazine* layout and a dense *Compact* list
 - **Estimated read time** and auto-generated key highlights on every article
-- **Listen to any article** — on-device text-to-speech reads the full piece aloud, with play / pause / resume and adjustable narration speed
+- **Listen to any article** — on-device text-to-speech reads the full piece aloud, with play / pause / resume, adjustable narration speed, and automatic Hindi/English voice switching per paragraph
 - **In-reader typography controls** — three text sizes (Compact · Standard · Comfort) and a Serif/Sans font toggle, tuned live while you read
 - **Save for later** — bookmark stories to a local, on-device Room library
 - **Live search** across Google News' full index, not just cached categories
 - **Native share sheet** integration for any article
+
+**🌐 Bilingual — English ⇄ Hindi**
+- **One-tap language switch** — a header chip (and a matching toggle in Settings) flips the entire app between English and हिन्दी instantly, with your choice remembered across launches
+- **Fully localized chrome** — every screen (Feed, Search, Saved, Full Article, Settings), category label, empty state, and toast is translated, not just a handful of strings
+- **Live content translation** — feed headlines, descriptions, and full scraped article bodies are translated on the fly through a dual-provider pipeline (Google's translate endpoint, with MyMemory as a fallback), with in-memory caching so repeat views don't re-translate
+- **Native category titles** — each category already carries its own Hindi name (भारत, व्यापार, प्रौद्योगिकी…), used directly when Hindi is active
 
 **🔔 Notifications & freshness**
 - **Breaking-news push notifications** — a periodic `WorkManager` background job checks Top Stories/India and notifies you of new breaking headlines, complete with a user-facing on/off toggle and a test-notification action
@@ -70,10 +76,12 @@ It isn't a thin wrapper around one API. It's a small, self-healing news pipeline
 - **Dark & light editorial themes** — two fully custom, non-default palettes ("Midnight Press" and "Newsprint"), not stock Material colors
 
 **📡 Data & reliability**
-- **Multi-source aggregation** — every category merges feeds from The Times of India, The Hindu, NDTV, and Google News, de-duplicated by normalized headline
+- **Multi-source aggregation** — every category merges feeds from The Times of India, The Hindu, NDTV, and Google News, de-duplicated by a Unicode-aware normalized headline key (so Hindi and English headlines both de-dupe correctly)
 - **Google News redirect decoding** — resolves obfuscated `news.google.com` article links back to the real publisher URL via Google's internal batch-execute endpoint
 - **Bot-wall & WAF detection** — recognizes Cloudflare / PerimeterX / Akamai challenge pages and gracefully falls back instead of rendering garbage
-- **Three-tier fallback chain** — direct RSS/XML → `rss2json` proxy → clean editorial fallback, so a single feed failure never breaks the feed
+- **Multi-tier scraping chain** — direct fetch → `rss2json` proxy for feeds → a Jina Reader proxy pass (HTML, then Markdown, retried against both the resolved and the raw article link) for full articles → a clearly-labeled editorial fallback, so a single blocked source rarely means a broken read
+- **Honest fallback labeling** — if every extraction attempt fails, the reader shows an explicit "Summary preview" state with a one-tap **Load Full Story** retry, instead of silently passing off a short summary as the real article
+- **Self-healing cache** — stale or fallback-only cached articles are detected and cleared automatically on retry, so a bad first attempt doesn't stick around forever
 - **Room-backed local persistence** for your saved reading list
 
 <br />
@@ -105,7 +113,9 @@ It isn't a thin wrapper around one API. It's a small, self-healing news pipeline
 | **JSON** | [Moshi](https://github.com/square/moshi) with KSP codegen |
 | **Image Loading** | [Coil](https://coil-kt.github.io/coil/) |
 | **Background Work** | [WorkManager](https://developer.android.com/topic/libraries/architecture/workmanager) — periodic breaking-news checks |
-| **Speech** | Android `TextToSpeech` — on-device article read-aloud |
+| **Speech** | Android `TextToSpeech` — on-device, language-aware article read-aloud |
+| **Translation** | Google translate endpoint (primary) + [MyMemory](https://mymemory.translated.net/) API (fallback), with in-memory caching |
+| **Reader Proxy** | [Jina AI Reader](https://jina.ai/reader/) (`r.jina.ai`) — secondary extraction pass for bot-walled publisher pages |
 | **Async** | Kotlin Coroutines & `Flow` |
 | **Cloud (scaffolded)** | Firebase (App Check, Auth, Firestore, AI SDK) — provisioned for future Gemini-powered features |
 | **Build** | Gradle Kotlin DSL, AGP 9.1.1, KSP |
@@ -133,8 +143,9 @@ flowchart TD
 
     subgraph Data["Data Sources"]
         FeedSvc["NewsFeedService<br/>(RSS + rss2json fallback)"]
-        ScrapeSvc["ArticleScraperService<br/>(Jsoup extraction)"]
+        ScrapeSvc["ArticleScraperService<br/>(Jsoup + Jina Reader)"]
         Decoder["GoogleNewsUrlDecoder<br/>(batchexecute RPC)"]
+        Translate["TranslationService<br/>(EN → HI)"]
         Speech["ArticleSpeechHelper<br/>(TextToSpeech)"]
         Worker["VartaBackgroundWorker<br/>(WorkManager)"]
         DB[("Room Database<br/>Bookmarked Articles")]
@@ -143,6 +154,8 @@ flowchart TD
     subgraph External["External Sources"]
         RSS[("Times of India · The Hindu<br/>NDTV · Google News")]
         Web[("Publisher Websites")]
+        Reader[("Jina Reader<br/>r.jina.ai")]
+        Trans[("Translate / MyMemory APIs")]
     end
 
     Feed --> VM
@@ -153,10 +166,14 @@ flowchart TD
     VM --> Repo
     Repo --> FeedSvc
     Repo --> ScrapeSvc
+    Repo --> Translate
     Repo --> DB
     Worker --> FeedSvc
     ScrapeSvc --> Decoder
+    ScrapeSvc --> Reader
     FeedSvc --> RSS
+    FeedSvc --> Translate
+    Translate --> Trans
     Decoder --> Web
     ScrapeSvc --> Web
 ```
@@ -166,11 +183,12 @@ flowchart TD
 ## How It Works
 
 1. **Fetch** — for the selected category, Vārta queries several publisher RSS feeds in parallel via OkHttp, stopping early once enough uniquely-illustrated stories are collected.
-2. **Merge & de-duplicate** — headlines are normalized and de-duplicated across sources, then sorted by recency.
+2. **Merge & de-duplicate** — headlines are normalized (Unicode-aware, so this works for Hindi too) and de-duplicated across sources, then sorted by recency.
 3. **Resolve** — when a headline links through `news.google.com`, the decoder replays Google's internal signed batch-execute call to recover the real publisher URL.
-4. **Scrape** — on open, `ArticleScraperService` fetches the publisher page with a realistic browser fingerprint, parses OpenGraph/Twitter/JSON-LD metadata for the hero image, byline, and body, and strips boilerplate.
-5. **Fall back gracefully** — if a fetch is blocked by a bot wall or fails outright, Vārta builds a clean, clearly-labeled editorial summary from the RSS description instead of showing an error screen.
-6. **Stay fresh** — a foreground polling loop surfaces a non-intrusive "new stories" banner, while a background `WorkManager` job checks periodically and raises a system notification for genuinely new breaking stories.
+4. **Scrape** — on open, `ArticleScraperService` first tries a direct fetch with a realistic browser fingerprint, parsing OpenGraph/Twitter/JSON-LD metadata for the hero image, byline, and body. If that's blocked or thin, it retries the same URL — and, separately, the original `article.link` — through the **Jina Reader** proxy in both HTML and Markdown modes.
+5. **Fall back gracefully, honestly** — if every extraction attempt fails, Vārta builds a clean editorial summary from the RSS description and clearly labels it a **Summary preview** with a **Load Full Story** retry, instead of quietly passing it off as the full article.
+6. **Translate on demand** — when Hindi is selected, headlines, descriptions, and full article text are routed through `TranslationService` (with an in-memory cache) before reaching the UI, so nothing needs to ship pre-translated.
+7. **Stay fresh** — a foreground polling loop surfaces a non-intrusive "new stories" banner, while a background `WorkManager` job checks periodically and raises a system notification for genuinely new breaking stories.
 
 <br />
 
@@ -187,7 +205,7 @@ flowchart TD
 | Science | विज्ञान | The Hindu, Google News |
 | Health | स्वास्थ्य | TOI, The Hindu, Google News |
 
-Plus free-text **search** across Google News' full index.
+Plus free-text **search** across Google News' full index. Every category, headline, and article body above is available live in Hindi via the header language chip.
 
 <br />
 
@@ -226,7 +244,7 @@ Vārta is built as a genuine editorial product — a "letterpress" identity shar
 </tr>
 </table>
 
-Typography pairs a **serif** display face for headlines and body copy with a **sans-serif** for labels, tabs, and metadata — a deliberate nod to print-newspaper hierarchy. In-app, readers can toggle between Serif and Sans and step through three text sizes; the companion website layers on **Playfair Display**, **Merriweather**, and **Rozha One** (Devanagari) alongside **Inter** for a true broadsheet feel.
+Typography pairs a **serif** display face for headlines and body copy with a **sans-serif** for labels, tabs, and metadata — a deliberate nod to print-newspaper hierarchy. In-app, readers can toggle between Serif and Sans, step through three text sizes, and flip the masthead itself between **EN** and **हि** with a single header chip; the companion website layers on **Playfair Display**, **Merriweather**, and **Rozha One** (Devanagari) alongside **Inter** for a true broadsheet feel.
 
 <br />
 
@@ -264,8 +282,8 @@ Enable **Install from unknown sources** on your Android device, transfer the APK
 ### Clone & Open
 
 ```bash
-git clone https://github.com/rw8165939-sketch/V-rta.git
-cd V-rta
+git clone https://github.com/Adarsh311/Varta.git
+cd Varta
 ```
 
 Open the folder in Android Studio and let Gradle sync — all dependencies are pinned in `gradle/libs.versions.toml`.
@@ -293,19 +311,20 @@ Or press **Run ▶** in Android Studio with a connected device/emulator selected
 ## Project Structure
 
 ```
-V-rta/
+Varta/
 ├── app/
 │   └── src/main/java/com/example/
 │       ├── MainActivity.kt
 │       ├── VartaApp.kt
 │       ├── data/
-│       │   ├── NewsRepository.kt
+│       │   ├── NewsRepository.kt           # Orchestrates feed/scrape/translate + cache
 │       │   └── local/                      # Room database, DAO, entities
-│       ├── model/                          # NewsArticle, NewsCategory, ScrapedArticle…
+│       ├── model/                          # NewsArticle, NewsCategory, AppLanguage, ScrapedArticle…
 │       ├── network/
-│       │   ├── NewsFeedService.kt          # RSS + JSON proxy fetching
-│       │   ├── ArticleScraperService.kt    # Full-article extraction
+│       │   ├── NewsFeedService.kt          # RSS + rss2json fallback fetching
+│       │   ├── ArticleScraperService.kt    # Direct + Jina Reader full-article extraction
 │       │   ├── GoogleNewsUrlDecoder.kt     # Redirect resolution
+│       │   ├── TranslationService.kt       # EN → HI translation (Google/MyMemory)
 │       │   └── RssFeedParser.kt
 │       ├── ui/
 │       │   ├── NewsViewModel.kt
@@ -313,7 +332,7 @@ V-rta/
 │       │   ├── components/                 # Story cards, preview sheet, notification dialog, skeletons
 │       │   ├── screens/                    # Feed, Search, Saved, Full Article
 │       │   └── theme/                      # Color, Type, Theme
-│       ├── util/                           # Date, image, TTS, notification helpers
+│       ├── util/                           # Date, image, TTS, notification helpers, VartaStrings (i18n)
 │       └── worker/
 │           └── VartaBackgroundWorker.kt    # Periodic breaking-news check
 ├── website/                                # Static broadsheet-style companion web edition
@@ -335,7 +354,8 @@ Ideas for future iterations:
 - [ ] Home-screen widget with top headlines
 - [ ] Offline caching of full article bodies (not just bookmark metadata)
 - [ ] Gemini-powered summarization, using the already-provisioned Firebase AI setup
-- [ ] Additional regional-language sources
+- [ ] Regional languages beyond Hindi (Marathi, Tamil, Bengali…)
+- [ ] On-device/offline translation to remove the runtime dependency on translate APIs
 - [ ] Deploy and link the companion website publicly
 
 <br />
@@ -354,6 +374,6 @@ No license file is currently included in this repository, which by default means
 
 <div align="center">
 
-Built by [**Adarsh**](https://github.com/rw8165939-sketch)
+Built by [**Adarsh**](https://github.com/Adarsh311)
 
 </div>
