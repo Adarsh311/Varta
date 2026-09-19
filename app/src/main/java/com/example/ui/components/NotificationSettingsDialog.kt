@@ -45,6 +45,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.example.model.AppLanguage
 import com.example.ui.theme.VartaPressRed
 import com.example.ui.theme.VartaSaffron
 
@@ -55,8 +56,10 @@ import com.example.util.NewsNotificationManager
 fun NotificationSettingsDialog(
     isEnabled: Boolean,
     isDarkMode: Boolean,
+    language: AppLanguage = AppLanguage.ENGLISH,
     onToggle: (Boolean) -> Unit,
     onToggleTheme: () -> Unit,
+    onToggleLanguage: (() -> Unit)? = null,
     onSendTest: () -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -104,7 +107,7 @@ fun NotificationSettingsDialog(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "PRESS PREFERENCES & ALERTS",
+                            text = if (language == AppLanguage.HINDI) "प्राथमिकताएं एवं अलर्ट" else "PRESS PREFERENCES & ALERTS",
                             style = MaterialTheme.typography.titleMedium.copy(
                                 fontFamily = FontFamily.Serif,
                                 fontWeight = FontWeight.Bold,
@@ -131,6 +134,85 @@ fun NotificationSettingsDialog(
                 Spacer(modifier = Modifier.height(8.dp))
                 HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f), thickness = 1.dp)
                 Spacer(modifier = Modifier.height(14.dp))
+
+                // Language Selection Section (English vs Hindi)
+                if (onToggleLanguage != null) {
+                    Text(
+                        text = if (language == AppLanguage.HINDI) "भाषा / LANGUAGE" else "LANGUAGE / भाषा",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontFamily = FontFamily.Serif,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 10.5.sp,
+                            letterSpacing = 0.8.sp
+                        ),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        // English Option
+                        Surface(
+                            shape = RoundedCornerShape(2.dp),
+                            color = if (language == AppLanguage.ENGLISH) VartaSaffron.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                            border = androidx.compose.foundation.BorderStroke(
+                                width = if (language == AppLanguage.ENGLISH) 1.5.dp else 0.8.dp,
+                                color = if (language == AppLanguage.ENGLISH) VartaSaffron else MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+                            ),
+                            modifier = Modifier
+                                .weight(1f)
+                                .clickable { if (language != AppLanguage.ENGLISH) onToggleLanguage() }
+                                .testTag("language_english_button")
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(vertical = 8.dp, horizontal = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Text(
+                                    text = "English",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = if (language == AppLanguage.ENGLISH) FontWeight.Bold else FontWeight.Medium,
+                                        fontSize = 11.5.sp
+                                    ),
+                                    color = if (language == AppLanguage.ENGLISH) VartaSaffron else MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
+
+                        // Hindi Option
+                        Surface(
+                            shape = RoundedCornerShape(2.dp),
+                            color = if (language == AppLanguage.HINDI) VartaSaffron.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                            border = androidx.compose.foundation.BorderStroke(
+                                width = if (language == AppLanguage.HINDI) 1.5.dp else 0.8.dp,
+                                color = if (language == AppLanguage.HINDI) VartaSaffron else MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+                            ),
+                            modifier = Modifier
+                                .weight(1f)
+                                .clickable { if (language != AppLanguage.HINDI) onToggleLanguage() }
+                                .testTag("language_hindi_button")
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(vertical = 8.dp, horizontal = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Text(
+                                    text = "हिन्दी (Hindi)",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = if (language == AppLanguage.HINDI) FontWeight.Bold else FontWeight.Medium,
+                                        fontSize = 11.5.sp
+                                    ),
+                                    color = if (language == AppLanguage.HINDI) VartaSaffron else MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+                }
 
                 // Theme Selection Options (Light vs Dark)
                 Text(

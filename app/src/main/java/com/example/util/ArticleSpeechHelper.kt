@@ -134,6 +134,20 @@ class ArticleSpeechHelper(context: Context) {
             paragraphs.getOrNull(idx) ?: return
         }
 
+        // Dynamically configure TTS language based on text content
+        val isHindi = textToSpeak.any { it in '\u0900'..'\u097F' }
+        if (isHindi) {
+            val res = tts?.setLanguage(Locale("hi", "IN"))
+            if (res == TextToSpeech.LANG_MISSING_DATA || res == TextToSpeech.LANG_NOT_SUPPORTED) {
+                tts?.setLanguage(Locale("hi"))
+            }
+        } else {
+            val res = tts?.setLanguage(Locale("en", "IN"))
+            if (res == TextToSpeech.LANG_MISSING_DATA || res == TextToSpeech.LANG_NOT_SUPPORTED) {
+                tts?.setLanguage(Locale.US)
+            }
+        }
+
         val params = android.os.Bundle()
         tts?.speak(textToSpeak, TextToSpeech.QUEUE_FLUSH, params, "varta_paragraph_$idx")
         _status.value = SpeechStatus.PLAYING

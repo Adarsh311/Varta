@@ -44,22 +44,26 @@ class VartaBackgroundWorker(
         private const val WORK_NAME = "varta_background_news_sync"
 
         fun schedulePeriodicSync(context: Context) {
-            val workManager = WorkManager.getInstance(context)
-            val constraints = Constraints.Builder()
-                .setRequiredNetworkType(NetworkType.CONNECTED)
-                .build()
+            try {
+                val workManager = WorkManager.getInstance(context)
+                val constraints = Constraints.Builder()
+                    .setRequiredNetworkType(NetworkType.CONNECTED)
+                    .build()
 
-            val workRequest = PeriodicWorkRequestBuilder<VartaBackgroundWorker>(
-                15, TimeUnit.MINUTES
-            )
-                .setConstraints(constraints)
-                .build()
+                val workRequest = PeriodicWorkRequestBuilder<VartaBackgroundWorker>(
+                    15, TimeUnit.MINUTES
+                )
+                    .setConstraints(constraints)
+                    .build()
 
-            workManager.enqueueUniquePeriodicWork(
-                WORK_NAME,
-                ExistingPeriodicWorkPolicy.KEEP,
-                workRequest
-            )
+                workManager.enqueueUniquePeriodicWork(
+                    WORK_NAME,
+                    ExistingPeriodicWorkPolicy.KEEP,
+                    workRequest
+                )
+            } catch (e: Exception) {
+                android.util.Log.w("VartaBackgroundWorker", "WorkManager initialization skipped or failed: ${e.message}")
+            }
         }
     }
 }

@@ -23,7 +23,8 @@ class NewsFeedService(
         .followRedirects(true)
         .followSslRedirects(true)
         .retryOnConnectionFailure(true)
-        .build()
+        .build(),
+    private val translationService: TranslationService = TranslationService(client)
 ) {
     private val userAgent =
         "Mozilla/5.0 (Linux; Android 14; Mobile; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Mobile Safari/537.36"
@@ -38,19 +39,24 @@ class NewsFeedService(
         SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.US)
     )
 
-    suspend fun fetchCategoryFeed(category: com.example.model.NewsCategory): Result<List<NewsArticle>> =
+    suspend fun fetchCategoryFeed(
+        category: com.example.model.NewsCategory,
+        language: com.example.model.AppLanguage = com.example.model.AppLanguage.ENGLISH
+    ): Result<List<NewsArticle>> =
         withContext(Dispatchers.IO) {
             val collectedArticles = mutableListOf<NewsArticle>()
             val seenKeys = mutableSetOf<String>()
+            val feedUrls = category.getFeedUrls(language)
+            val categoryLabel = category.getLocalizedTitle(language)
 
-            for (url in category.feedUrls) {
+            for (url in feedUrls) {
                 try {
-                    val directResult = tryDirectRssXml(url, category.title)
+                    val directResult = tryDirectRssXml(url, categoryLabel)
                     if (directResult.isSuccess) {
                         val items = directResult.getOrNull() ?: emptyList()
                         for (item in items) {
                             val key = normalizeKey(item.title)
-                            if (key.length >= 10 && seenKeys.add(key)) {
+                            if (key.length >= 6 && seenKeys.add(key)) {
                                 collectedArticles.add(item)
                             }
                         }
@@ -70,28 +76,44 @@ class NewsFeedService(
             if (collectedArticles.isNotEmpty()) {
                 val sorted = collectedArticles.sortedByDescending { it.timestamp }
                 val uniqueImageFeed = NewsImageHelper.ensureUniqueImagesAcrossFeed(sorted)
-                Log.d("NewsFeedService", "Fetched ${uniqueImageFeed.size} multi-source articles for ${category.title}")
-                return@withContext Result.success(uniqueImageFeed)
+                val finalFeed = if (language == com.example.model.AppLanguage.HINDI) {
+                    translationService.translateArticles(uniqueImageFeed)
+                } else {
+                    uniqueImageFeed
+                }
+                Log.d("NewsFeedService", "Fetched ${finalFeed.size} multi-source articles for $categoryLabel ($language)")
+                return@withContext Result.success(finalFeed)
             }
 
             // Fallback to legacy single feed query
-            fetchFeed(category.feedUrl, category.title)
+            val fallbackResult = fetchFeed(feedUrls.firstOrNull() ?: category.feedUrl, categoryLabel, language)
+            fallbackResult
         }
 
     private fun normalizeKey(title: String): String {
-        return title.lowercase(Locale.ROOT)
-            .replace(Regex("[^a-z0-9]"), "")
+        val filtered = title.lowercase(Locale.ROOT)
+            .filter { it.isLetterOrDigit() }
             .take(50)
+        return filtered.ifBlank { title.trim().take(40) }
     }
 
-    suspend fun fetchFeed(url: String, categoryName: String): Result<List<NewsArticle>> =
+    suspend fun fetchFeed(
+        url: String,
+        categoryName: String,
+        language: com.example.model.AppLanguage = com.example.model.AppLanguage.ENGLISH
+    ): Result<List<NewsArticle>> =
         withContext(Dispatchers.IO) {
             // 1. Direct Google News RSS XML fetch
             val directResult = tryDirectRssXml(url, categoryName)
             if (directResult.isSuccess && directResult.getOrNull()?.isNotEmpty() == true) {
                 val uniqueImages = NewsImageHelper.ensureUniqueImagesAcrossFeed(directResult.getOrNull()!!)
-                Log.d("NewsFeedService", "Fetched ${uniqueImages.size} items directly from RSS")
-                return@withContext Result.success(uniqueImages)
+                val finalFeed = if (language == com.example.model.AppLanguage.HINDI) {
+                    translationService.translateArticles(uniqueImages)
+                } else {
+                    uniqueImages
+                }
+                Log.d("NewsFeedService", "Fetched ${finalFeed.size} items directly from RSS")
+                return@withContext Result.success(finalFeed)
             }
 
             // 2. Secondary fallback via rss2json proxy
@@ -99,7 +121,12 @@ class NewsFeedService(
             val proxyResult = tryRss2JsonProxy(url, categoryName)
             if (proxyResult.isSuccess && proxyResult.getOrNull()?.isNotEmpty() == true) {
                 val uniqueImages = NewsImageHelper.ensureUniqueImagesAcrossFeed(proxyResult.getOrNull()!!)
-                return@withContext Result.success(uniqueImages)
+                val finalFeed = if (language == com.example.model.AppLanguage.HINDI) {
+                    translationService.translateArticles(uniqueImages)
+                } else {
+                    uniqueImages
+                }
+                return@withContext Result.success(finalFeed)
             }
 
             val error = proxyResult.exceptionOrNull()

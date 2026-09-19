@@ -40,6 +40,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.model.AppLanguage
 import com.example.model.NewsArticle
 import com.example.model.NewsCategory
 import com.example.model.ReadingDensity
@@ -50,6 +51,7 @@ import com.example.ui.components.MagazineStoryCard
 import com.example.ui.components.NewStoriesBanner
 import com.example.ui.components.SkeletonEditorialFeed
 import com.example.ui.theme.VartaSaffron
+import com.example.util.VartaStrings
 
 @Composable
 fun FeedScreen(
@@ -62,6 +64,7 @@ fun FeedScreen(
     hasNewStories: Boolean,
     onApplyNewStories: () -> Unit,
     readingDensity: ReadingDensity,
+    language: AppLanguage = AppLanguage.ENGLISH,
     onArticleClick: (NewsArticle) -> Unit,
     onBookmarkToggle: (NewsArticle) -> Unit,
     onShare: (NewsArticle) -> Unit,
@@ -84,7 +87,8 @@ fun FeedScreen(
             CategorySelectorBar(
                 categories = categories,
                 selectedCategory = selectedCategory,
-                onSelectCategory = onSelectCategory
+                onSelectCategory = onSelectCategory,
+                language = language
             )
 
             if (isLoading && articles.isEmpty()) {
@@ -109,7 +113,7 @@ fun FeedScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = "Unable to fetch live feed",
+                            text = VartaStrings.unableToFetchFeed(language),
                             style = MaterialTheme.typography.titleMedium.copy(
                                 fontFamily = FontFamily.Serif,
                                 fontWeight = FontWeight.SemiBold
@@ -139,7 +143,7 @@ fun FeedScreen(
                                 modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.size(8.dp))
-                            Text("Retry Live Feed", fontWeight = FontWeight.Bold)
+                            Text(VartaStrings.retryFeed(language), fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -176,7 +180,7 @@ fun FeedScreen(
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
                                         Text(
-                                            text = "◆ WIRE CHRONICLES & DISPATCHES",
+                                            text = VartaStrings.wireChronicles(language),
                                             style = MaterialTheme.typography.labelSmall.copy(
                                                 fontFamily = FontFamily.Serif,
                                                 fontWeight = FontWeight.Bold,
@@ -190,7 +194,7 @@ fun FeedScreen(
                                         )
                                         Spacer(modifier = Modifier.size(6.dp))
                                         Text(
-                                            text = "SECTION B • PAGE 2",
+                                            text = VartaStrings.sectionB(language),
                                             style = MaterialTheme.typography.labelSmall.copy(
                                                 fontFamily = FontFamily.Serif,
                                                 fontWeight = FontWeight.SemiBold,
@@ -240,7 +244,7 @@ fun FeedScreen(
                 .align(Alignment.TopCenter)
                 .padding(top = 54.dp)
         ) {
-            NewStoriesBanner(onClick = onApplyNewStories)
+            NewStoriesBanner(onClick = onApplyNewStories, language = language)
         }
     }
 }

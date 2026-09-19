@@ -26,6 +26,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 data class NewsUiState(
+    val language: com.example.model.AppLanguage = com.example.model.AppLanguage.ENGLISH,
     val currentTab: NavigationTab = NavigationTab.FEED,
     val selectedCategory: NewsCategory = NewsCategory.INDIA,
     val articles: List<NewsArticle> = emptyList(),
@@ -59,6 +60,7 @@ class NewsViewModel(
 
     private val _uiState = MutableStateFlow(
         NewsUiState(
+            language = com.example.model.AppLanguage.fromCode(prefs.getString("app_language", "en")),
             isDarkMode = prefs.getBoolean("is_dark_mode", true)
         )
     )
@@ -139,7 +141,8 @@ class NewsViewModel(
                     errorMessage = null
                 )
             }
-            val result = repository.getFeed(category)
+            val currentLang = _uiState.value.language
+            val result = repository.getFeed(category, currentLang)
             result.onSuccess { freshArticles ->
                 _uiState.update {
                     it.copy(
@@ -193,7 +196,8 @@ class NewsViewModel(
         addRecentSearch(trimmed)
         viewModelScope.launch {
             _uiState.update { it.copy(isSearching = true, searchErrorMessage = null) }
-            val result = repository.searchNews(trimmed)
+            val currentLang = _uiState.value.language
+            val result = repository.searchNews(trimmed, currentLang)
             result.onSuccess { results ->
                 _uiState.update {
                     it.copy(
@@ -277,7 +281,7 @@ class NewsViewModel(
             )
         }
         viewModelScope.launch {
-            val fullArticle = repository.getFullArticle(article)
+            val fullArticle = repository.getFullArticle(article, _uiState.value.language)
             _uiState.update { current ->
                 if (current.selectedArticle?.id == article.id) {
                     val resolvedHero = fullArticle.heroImageUrl
@@ -314,7 +318,10 @@ class NewsViewModel(
 
     fun retryScrapeArticle() {
         val article = _uiState.value.selectedArticle ?: return
-        openArticle(article)
+        viewModelScope.launch {
+            repository.clearArticleCache(article.id)
+            openArticle(article)
+        }
     }
 
     fun closeArticle() {
@@ -340,6 +347,22 @@ class NewsViewModel(
             prefs.edit().putBoolean("is_dark_mode", nextMode).apply()
             state.copy(isDarkMode = nextMode)
         }
+    }
+
+    fun setLanguage(language: com.example.model.AppLanguage) {
+        if (_uiState.value.language == language) return
+        prefs.edit().putString("app_language", language.code).apply()
+        _uiState.update { it.copy(language = language) }
+        loadCategoryFeed(_uiState.value.selectedCategory, isManualRefresh = true)
+    }
+
+    fun toggleLanguage() {
+        val nextLanguage = if (_uiState.value.language == com.example.model.AppLanguage.HINDI) {
+            com.example.model.AppLanguage.ENGLISH
+        } else {
+            com.example.model.AppLanguage.HINDI
+        }
+        setLanguage(nextLanguage)
     }
 
     private var imageEnrichJob: Job? = null
@@ -449,7 +472,7 @@ class NewsViewModel(
             while (isActive) {
                 delay(6 * 60 * 1000L)
                 val currentCategory = _uiState.value.selectedCategory
-                val result = repository.getFeed(currentCategory)
+                val result = repository.getFeed(currentCategory, _uiState.value.language)
                 result.onSuccess { latestArticles ->
                     val currentIds = _uiState.value.articles.map { it.id }.toSet()
                     val hasNew = latestArticles.any { !currentIds.contains(it.id) }

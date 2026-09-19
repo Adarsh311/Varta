@@ -47,11 +47,13 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.model.AppLanguage
 import com.example.model.NewsArticle
 import com.example.model.ReadingDensity
 import com.example.ui.components.CompactStoryCard
 import com.example.ui.components.MagazineStoryCard
 import com.example.ui.theme.VartaSaffron
+import com.example.util.VartaStrings
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -68,6 +70,7 @@ fun SearchScreen(
     isSearching: Boolean,
     errorMessage: String?,
     readingDensity: ReadingDensity,
+    language: AppLanguage = AppLanguage.ENGLISH,
     recentSearches: List<String> = emptyList(),
     onRemoveRecentSearch: ((String) -> Unit)? = null,
     onClearRecentSearches: (() -> Unit)? = null,
@@ -100,7 +103,7 @@ fun SearchScreen(
                 placeholder = @Composable {
                     if (!isSearchFocused && query.isEmpty()) {
                         Text(
-                            text = "Search Indian & global dispatches...",
+                            text = VartaStrings.searchPlaceholder(language),
                             style = MaterialTheme.typography.bodyMedium.copy(
                                 fontFamily = FontFamily.Serif
                             ),
@@ -161,7 +164,7 @@ fun SearchScreen(
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        text = "Searching live Google News India dispatches...",
+                        text = if (language == AppLanguage.HINDI) "लाइव समाचार खोजा जा रहा है..." else "Searching live Google News India dispatches...",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -207,7 +210,7 @@ fun SearchScreen(
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
-                                    text = "RECENT SEARCHES",
+                                    text = VartaStrings.recentSearches(language),
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         fontWeight = FontWeight.Bold,
                                         letterSpacing = 1.2.sp
@@ -217,7 +220,7 @@ fun SearchScreen(
                             }
                             if (onClearRecentSearches != null) {
                                 TextButton(onClick = onClearRecentSearches) {
-                                    Text("Clear", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text(VartaStrings.clear(language), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
                             }
                         }
@@ -274,7 +277,7 @@ fun SearchScreen(
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "TRENDING IN INDIA",
+                            text = VartaStrings.trendingInIndia(language),
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontWeight = FontWeight.Bold,
                                 letterSpacing = 1.2.sp
@@ -285,16 +288,29 @@ fun SearchScreen(
                     Spacer(modifier = Modifier.height(12.dp))
                 }
 
-                val sampleTopics = listOf(
-                    "ISRO Gaganyaan Mission",
-                    "Reserve Bank Monetary Policy",
-                    "India Semiconductor Mission",
-                    "Sensex & Nifty Live Market",
-                    "Solar Energy Infrastructure",
-                    "Cricket World Test Championship",
-                    "AI Startup Ecosystem India",
-                    "Vande Bharat Sleeper Trains"
-                )
+                val sampleTopics = if (language == AppLanguage.HINDI) {
+                    listOf(
+                        "इसरो गगनयान मिशन",
+                        "आरबीआई मौद्रिक नीति",
+                        "भारत सेमीकंडक्टर मिशन",
+                        "शेयर बाज़ार सेंसेक्स निफ्टी",
+                        "सौर ऊर्जा परियोजना",
+                        "क्रिकेट टेस्ट चैंपियनशिप",
+                        "वंदे भारत स्लीपर ट्रेन",
+                        "एआई और तकनीक विकास"
+                    )
+                } else {
+                    listOf(
+                        "ISRO Gaganyaan Mission",
+                        "Reserve Bank Monetary Policy",
+                        "India Semiconductor Mission",
+                        "Sensex & Nifty Live Market",
+                        "Solar Energy Infrastructure",
+                        "Cricket World Test Championship",
+                        "AI Startup Ecosystem India",
+                        "Vande Bharat Sleeper Trains"
+                    )
+                }
 
                 items(sampleTopics) { topic ->
                     Text(
@@ -324,7 +340,7 @@ fun SearchScreen(
             ) {
                 item {
                     Text(
-                        text = "${results.size} stories found",
+                        text = if (language == AppLanguage.HINDI) "${results.size} समाचार मिले" else "${results.size} stories found",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)

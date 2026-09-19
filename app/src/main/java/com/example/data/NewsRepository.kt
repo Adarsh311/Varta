@@ -7,6 +7,7 @@ import com.example.model.NewsCategory
 import com.example.model.ScrapedArticle
 import com.example.network.ArticleScraperService
 import com.example.network.NewsFeedService
+import com.example.network.TranslationService
 import com.example.util.NewsImageHelper
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -14,7 +15,8 @@ import kotlinx.coroutines.flow.map
 class NewsRepository(
     private val feedService: NewsFeedService,
     private val articleDao: ArticleDao,
-    private val scraperService: ArticleScraperService = ArticleScraperService()
+    private val scraperService: ArticleScraperService = ArticleScraperService(),
+    private val translationService: TranslationService = TranslationService()
 ) {
     val bookmarkedArticles: Flow<List<NewsArticle>> = articleDao.getBookmarkedArticles()
         .map { list -> list.map { it.toNewsArticle() } }
@@ -22,23 +24,39 @@ class NewsRepository(
     val bookmarkedIds: Flow<Set<String>> = articleDao.getBookmarkedIds()
         .map { it.toSet() }
 
-    suspend fun getFeed(category: NewsCategory): Result<List<NewsArticle>> {
-        return feedService.fetchCategoryFeed(category)
+    suspend fun getFeed(
+        category: NewsCategory,
+        language: com.example.model.AppLanguage = com.example.model.AppLanguage.ENGLISH
+    ): Result<List<NewsArticle>> {
+        return feedService.fetchCategoryFeed(category, language)
     }
 
-    suspend fun searchNews(query: String): Result<List<NewsArticle>> {
-        val searchUrl = NewsCategory.searchUrl(query)
-        return feedService.fetchFeed(searchUrl, "Search: $query")
+    suspend fun searchNews(
+        query: String,
+        language: com.example.model.AppLanguage = com.example.model.AppLanguage.ENGLISH
+    ): Result<List<NewsArticle>> {
+        val searchUrl = NewsCategory.searchUrl(query, language)
+        return feedService.fetchFeed(searchUrl, "Search: $query", language)
     }
 
-    suspend fun getFullArticle(article: NewsArticle): ScrapedArticle {
+    suspend fun getFullArticle(
+        article: NewsArticle,
+        language: com.example.model.AppLanguage = com.example.model.AppLanguage.ENGLISH
+    ): ScrapedArticle {
         // 1. Check if we have offline cached paragraphs in Room database
         val localEntity = articleDao.getArticleById(article.id)
         if (localEntity != null) {
             val localParagraphs = localEntity.getParagraphsList()
-            if (localParagraphs.isNotEmpty()) {
+            val isOldFallback = localParagraphs.size <= 3 && localParagraphs.any {
+                it.contains("यह घटनाक्रम देश के राष्ट्रीय") ||
+                it.contains("According to reports by") ||
+                it.contains("पाठक पूरी रिपोर्ट") ||
+                it.contains("इस विषय पर लगातार ताज़ा रिपोर्ट") ||
+                it.contains("Readers can review the full unedited report")
+            }
+            if (localParagraphs.size >= 2 && !isOldFallback) {
                 val highlights = localEntity.getHighlightsList()
-                return ScrapedArticle(
+                val cachedArticle = ScrapedArticle(
                     id = localEntity.id,
                     title = localEntity.title,
                     source = localEntity.source,
@@ -52,6 +70,11 @@ class NewsRepository(
                     keyHighlights = highlights,
                     isScrapedFromWeb = true
                 )
+                return if (language == com.example.model.AppLanguage.HINDI) {
+                    translationService.translateScrapedArticle(cachedArticle)
+                } else {
+                    cachedArticle
+                }
             }
         }
 
@@ -64,7 +87,23 @@ class NewsRepository(
             articleDao.insertOrUpdate(updatedEntity)
         }
 
-        return scraped
+        return if (language == com.example.model.AppLanguage.HINDI) {
+            translationService.translateScrapedArticle(scraped)
+        } else {
+            scraped
+        }
+    }
+
+    suspend fun clearArticleCache(articleId: String) {
+        scraperService.clearCacheFor(articleId)
+        val entity = articleDao.getArticleById(articleId)
+        if (entity != null) {
+            if (!entity.isBookmarked) {
+                articleDao.deleteById(articleId)
+            } else {
+                articleDao.insertOrUpdate(entity.copy(paragraphsJson = null, keyHighlightsJson = null))
+            }
+        }
     }
 
     suspend fun clearAllBookmarks() {

@@ -70,7 +70,11 @@ fun VartaAppScreen(
         val willBeBookmarked = !article.isBookmarked
         viewModel.toggleBookmark(article)
         scope.launch {
-            val message = if (willBeBookmarked) "Saved to Archived Dispatches" else "Removed from Archived Dispatches"
+            val message = if (willBeBookmarked) {
+                if (uiState.language == com.example.model.AppLanguage.HINDI) "आर्काइव में सहेजा गया" else "Saved to Archived Dispatches"
+            } else {
+                if (uiState.language == com.example.model.AppLanguage.HINDI) "आर्काइव से हटाया गया" else "Removed from Archived Dispatches"
+            }
             snackbarHostState.showSnackbar(message = message, withDismissAction = true)
         }
     }
@@ -91,10 +95,12 @@ fun VartaAppScreen(
                     savedCount = savedArticles.size,
                     isRefreshing = uiState.isRefreshing,
                     notificationsEnabled = uiState.isImportantNotificationsEnabled,
+                    language = uiState.language,
                     onRefresh = { viewModel.refreshCurrentFeed() },
                     onTabSelected = { tab -> viewModel.selectTab(tab) },
                     onToggleDensity = { viewModel.toggleReadingDensity() },
                     onToggleTheme = { viewModel.toggleTheme() },
+                    onToggleLanguage = { viewModel.toggleLanguage() },
                     onOpenNotificationSettings = { viewModel.showNotificationSettings(true) },
                     modifier = Modifier.statusBarsPadding()
                 )
@@ -118,6 +124,7 @@ fun VartaAppScreen(
                             hasNewStories = uiState.hasNewStoriesAvailable,
                             onApplyNewStories = { viewModel.applyPendingNewStories() },
                             readingDensity = uiState.readingDensity,
+                            language = uiState.language,
                             onArticleClick = { article -> viewModel.openArticle(article) },
                             onBookmarkToggle = onBookmarkToggleWithFeedback,
                             onShare = onShareArticle,
@@ -133,6 +140,7 @@ fun VartaAppScreen(
                             isSearching = uiState.isSearching,
                             errorMessage = uiState.searchErrorMessage,
                             readingDensity = uiState.readingDensity,
+                            language = uiState.language,
                             recentSearches = uiState.recentSearches,
                             onRemoveRecentSearch = { q -> viewModel.removeRecentSearch(q) },
                             onClearRecentSearches = { viewModel.clearRecentSearches() },
@@ -145,6 +153,7 @@ fun VartaAppScreen(
                         SavedScreen(
                             savedArticles = savedArticles,
                             readingDensity = uiState.readingDensity,
+                            language = uiState.language,
                             onArticleClick = { article -> viewModel.openArticle(article) },
                             onBookmarkToggle = onBookmarkToggleWithFeedback,
                             onShare = onShareArticle,
@@ -159,11 +168,15 @@ fun VartaAppScreen(
             NotificationSettingsDialog(
                 isEnabled = uiState.isImportantNotificationsEnabled,
                 isDarkMode = uiState.isDarkMode,
+                language = uiState.language,
                 onToggle = { enabled ->
                     viewModel.setImportantNotificationsEnabled(context, enabled)
                 },
                 onToggleTheme = {
                     viewModel.toggleTheme()
+                },
+                onToggleLanguage = {
+                    viewModel.toggleLanguage()
                 },
                 onSendTest = {
                     viewModel.triggerTestImportantNotification(context)
@@ -191,6 +204,7 @@ fun VartaAppScreen(
                     article = activeArticle,
                     scrapedArticle = uiState.scrapedArticle,
                     isLoading = uiState.isScrapingArticle,
+                    language = uiState.language,
                     onBack = { viewModel.closeArticle() },
                     onBookmarkToggle = onBookmarkToggleWithFeedback,
                     onShare = onShareArticle,

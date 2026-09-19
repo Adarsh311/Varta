@@ -60,6 +60,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.model.AppLanguage
 import com.example.model.NavigationTab
 import com.example.model.NewsArticle
 import com.example.model.NewsCategory
@@ -67,6 +68,7 @@ import com.example.model.ReadingDensity
 import com.example.ui.theme.VartaPressRed
 import com.example.ui.theme.VartaSaffron
 import com.example.util.NewsImageHelper
+import com.example.util.VartaStrings
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -79,10 +81,12 @@ fun VartaMasthead(
     savedCount: Int,
     isRefreshing: Boolean,
     notificationsEnabled: Boolean = true,
+    language: AppLanguage = AppLanguage.ENGLISH,
     onRefresh: () -> Unit,
     onTabSelected: (NavigationTab) -> Unit,
     onToggleDensity: () -> Unit,
     onToggleTheme: () -> Unit,
+    onToggleLanguage: () -> Unit = {},
     onOpenNotificationSettings: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
@@ -167,7 +171,7 @@ fun VartaMasthead(
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = "FREE PRESS EDITION",
+                    text = VartaStrings.editionBadge(language),
                     style = MaterialTheme.typography.labelSmall.copy(
                         fontSize = 8.sp,
                         fontWeight = FontWeight.SemiBold,
@@ -236,7 +240,7 @@ fun VartaMasthead(
             Spacer(modifier = Modifier.height(2.dp))
 
             Text(
-                text = "DAILY CHRONICLE OF NATIONAL & INTERNATIONAL DISPATCHES",
+                text = VartaStrings.tagline(language),
                 style = MaterialTheme.typography.labelSmall.copy(
                     fontFamily = FontFamily.Serif,
                     letterSpacing = 1.2.sp,
@@ -279,13 +283,13 @@ fun VartaMasthead(
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 EditorialNavButton(
-                    title = "DISPATCHES",
+                    title = VartaStrings.dispatches(language),
                     isSelected = currentTab == NavigationTab.FEED,
                     onClick = { onTabSelected(NavigationTab.FEED) }
                 )
 
                 EditorialNavButton(
-                    title = "SAVED" + if (savedCount > 0) " ($savedCount)" else "",
+                    title = VartaStrings.saved(language, savedCount),
                     isSelected = currentTab == NavigationTab.SAVED,
                     onClick = {
                         if (currentTab == NavigationTab.SAVED) {
@@ -298,7 +302,7 @@ fun VartaMasthead(
                 )
 
                 EditorialNavButton(
-                    title = "INDEX / SEARCH",
+                    title = VartaStrings.searchIndex(language),
                     isSelected = currentTab == NavigationTab.SEARCH,
                     onClick = {
                         if (currentTab == NavigationTab.SEARCH) {
@@ -316,6 +320,31 @@ fun VartaMasthead(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(2.dp)
             ) {
+                // Language Switch Chip: Instant toggle between English and Hindi
+                Surface(
+                    shape = RoundedCornerShape(3.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    border = androidx.compose.foundation.BorderStroke(
+                        0.8.dp,
+                        VartaSaffron.copy(alpha = 0.7f)
+                    ),
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(3.dp))
+                        .clickable { onToggleLanguage() }
+                        .testTag("language_toggle_button")
+                ) {
+                    Text(
+                        text = if (language == AppLanguage.HINDI) "हिन्दी" else "EN",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontFamily = FontFamily.Serif,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 11.sp,
+                            color = VartaSaffron
+                        ),
+                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 4.dp)
+                    )
+                }
+
                 IconButton(
                     onClick = onOpenNotificationSettings,
                     modifier = Modifier
@@ -423,6 +452,7 @@ fun CategorySelectorBar(
     categories: List<NewsCategory>,
     selectedCategory: NewsCategory,
     onSelectCategory: (NewsCategory) -> Unit,
+    language: AppLanguage = AppLanguage.ENGLISH,
     modifier: Modifier = Modifier
 ) {
     val scrollState = rememberScrollState()
@@ -461,7 +491,7 @@ fun CategorySelectorBar(
                         )
                     }
                     Text(
-                        text = category.title.uppercase(Locale.getDefault()),
+                        text = category.getLocalizedTitle(language).uppercase(Locale.getDefault()),
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontFamily = FontFamily.Serif,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
@@ -478,6 +508,7 @@ fun CategorySelectorBar(
 @Composable
 fun NewStoriesBanner(
     onClick: () -> Unit,
+    language: AppLanguage = AppLanguage.ENGLISH,
     modifier: Modifier = Modifier
 ) {
     Surface(
@@ -501,7 +532,7 @@ fun NewStoriesBanner(
             )
             Spacer(modifier = Modifier.width(6.dp))
             Text(
-                text = "EXTRA EDITION — Fresh Dispatches Available (Tap to Load)",
+                text = VartaStrings.freshStoriesAvailable(language),
                 style = MaterialTheme.typography.labelSmall.copy(
                     fontFamily = FontFamily.Serif,
                     fontWeight = FontWeight.Bold,

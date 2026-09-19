@@ -18,6 +18,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -62,6 +63,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
@@ -90,6 +92,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.model.AppLanguage
 import com.example.model.NewsArticle
 import com.example.model.ScrapedArticle
 import com.example.ui.theme.VartaSaffron
@@ -122,6 +125,7 @@ fun FullArticleScreen(
     article: NewsArticle,
     scrapedArticle: ScrapedArticle?,
     isLoading: Boolean,
+    language: AppLanguage = AppLanguage.ENGLISH,
     onBack: () -> Unit,
     onBookmarkToggle: (NewsArticle) -> Unit,
     onShare: (NewsArticle) -> Unit,
@@ -232,7 +236,8 @@ fun FullArticleScreen(
         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val clip = ClipData.newPlainText(label, text)
         clipboard.setPrimaryClip(clip)
-        Toast.makeText(context, "$label copied to clipboard", Toast.LENGTH_SHORT).show()
+        val msg = if (language == AppLanguage.HINDI) "$label कॉपी हो गया" else "$label copied to clipboard"
+        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
     }
 
     Box(
@@ -263,7 +268,7 @@ fun FullArticleScreen(
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
+                        contentDescription = if (language == AppLanguage.HINDI) "पीछे जाएं" else "Back",
                         tint = effectiveText
                     )
                 }
@@ -302,7 +307,11 @@ fun FullArticleScreen(
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = if (speechStatus == SpeechStatus.PLAYING) "Listening" else "Listen",
+                                text = if (speechStatus == SpeechStatus.PLAYING) {
+                                    if (language == AppLanguage.HINDI) "सुन रहे हैं" else "Listening"
+                                } else {
+                                    if (language == AppLanguage.HINDI) "सुनें" else "Listen"
+                                },
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 11.sp
@@ -530,7 +539,7 @@ fun FullArticleScreen(
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = "$readingMinutes min read",
+                                text = if (language == AppLanguage.HINDI) "$readingMinutes मिनट का पठन" else "$readingMinutes min read",
                                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
                                 color = effectiveText.copy(alpha = 0.7f),
                                 maxLines = 1
@@ -566,7 +575,7 @@ fun FullArticleScreen(
                     if (!resolved.author.isNullOrBlank()) {
                         Spacer(modifier = Modifier.height(10.dp))
                         Text(
-                            text = "By ${resolved.author}",
+                            text = if (language == AppLanguage.HINDI) "लेखक: ${resolved.author}" else "By ${resolved.author}",
                             style = MaterialTheme.typography.bodySmall.copy(
                                 fontWeight = FontWeight.Medium,
                                 letterSpacing = 0.2.sp
@@ -621,7 +630,7 @@ fun FullArticleScreen(
                                 )
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Text(
-                                    text = "Loading dispatch from ${article.source}...",
+                                    text = if (language == AppLanguage.HINDI) "${article.source} से समाचार लोड हो रहा है..." else "Loading dispatch from ${article.source}...",
                                     style = MaterialTheme.typography.bodySmall.copy(
                                         fontWeight = FontWeight.Medium
                                     ),
@@ -641,6 +650,41 @@ fun FullArticleScreen(
                             Spacer(modifier = Modifier.height(12.dp))
                         }
                     } else {
+                        if (!resolved.isScrapedFromWeb) {
+                            Spacer(modifier = Modifier.height(14.dp))
+                            Surface(
+                                shape = RoundedCornerShape(10.dp),
+                                color = effectiveSurface.copy(alpha = 0.5f),
+                                border = androidx.compose.foundation.BorderStroke(
+                                    1.dp,
+                                    VartaSaffron.copy(alpha = 0.4f)
+                                ),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = if (language == AppLanguage.HINDI) "संक्षिप्त पूर्वावलोकन" else "Summary preview",
+                                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+                                        color = effectiveText.copy(alpha = 0.8f)
+                                    )
+                                    TextButton(
+                                        onClick = onRetry,
+                                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                                    ) {
+                                        Text(
+                                            text = if (language == AppLanguage.HINDI) "पूरा लेख लोड करें" else "Load Full Story",
+                                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                                            color = VartaSaffron
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
                         // Key Highlights Box
                         if (resolved.keyHighlights.isNotEmpty()) {
                             Spacer(modifier = Modifier.height(20.dp))
@@ -667,7 +711,7 @@ fun FullArticleScreen(
                                             )
                                             Spacer(modifier = Modifier.width(8.dp))
                                             Text(
-                                                text = "KEY TAKEAWAYS",
+                                                text = if (language == AppLanguage.HINDI) "मुख्य बिंदु" else "KEY TAKEAWAYS",
                                                 style = MaterialTheme.typography.labelSmall.copy(
                                                     fontWeight = FontWeight.Bold,
                                                     letterSpacing = 1.2.sp
@@ -832,7 +876,7 @@ fun FullArticleScreen(
                         ) {
                             Column(modifier = Modifier.padding(18.dp)) {
                                 Text(
-                                    text = "ORIGINAL REPORT",
+                                    text = if (language == AppLanguage.HINDI) "मूल समाचार" else "ORIGINAL REPORT",
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         fontWeight = FontWeight.Bold,
                                         letterSpacing = 1.sp
@@ -841,7 +885,7 @@ fun FullArticleScreen(
                                 )
                                 Spacer(modifier = Modifier.height(6.dp))
                                 Text(
-                                    text = "Published by ${article.source}",
+                                    text = if (language == AppLanguage.HINDI) "${article.source} द्वारा प्रकाशित" else "Published by ${article.source}",
                                     style = MaterialTheme.typography.bodyMedium.copy(
                                         fontWeight = FontWeight.SemiBold
                                     ),
@@ -886,7 +930,7 @@ fun FullArticleScreen(
                                         )
                                         Spacer(modifier = Modifier.width(6.dp))
                                         Text(
-                                            text = "Read on ${article.source}",
+                                            text = if (language == AppLanguage.HINDI) "${article.source} पर पढ़ें" else "Read on ${article.source}",
                                             style = MaterialTheme.typography.labelMedium.copy(
                                                 fontWeight = FontWeight.Bold
                                             )
@@ -907,7 +951,10 @@ fun FullArticleScreen(
                                             tint = VartaSaffron
                                         )
                                         Spacer(modifier = Modifier.width(6.dp))
-                                        Text("Copy", color = effectiveText)
+                                        Text(
+                                            text = if (language == AppLanguage.HINDI) "कॉपी" else "Copy",
+                                            color = effectiveText
+                                        )
                                     }
                                 }
                             }
@@ -977,7 +1024,7 @@ fun FullArticleScreen(
                         Spacer(modifier = Modifier.width(10.dp))
                         Column {
                             Text(
-                                text = "Reading Dispatch aloud",
+                                text = if (language == AppLanguage.HINDI) "समाचार सुनाया जा रहा है" else "Reading Dispatch aloud",
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontWeight = FontWeight.Bold,
                                     color = VartaSaffron
@@ -985,7 +1032,7 @@ fun FullArticleScreen(
                             )
                             val totalParas = if (paragraphs.isNotEmpty()) paragraphs.size else 1
                             Text(
-                                text = "Paragraph ${currentSpeakingIndex + 1} of $totalParas",
+                                text = if (language == AppLanguage.HINDI) "पैराग्राफ ${currentSpeakingIndex + 1} / $totalParas" else "Paragraph ${currentSpeakingIndex + 1} of $totalParas",
                                 style = MaterialTheme.typography.bodySmall.copy(
                                     fontSize = 11.sp,
                                     color = Color(0xFFA8A399)

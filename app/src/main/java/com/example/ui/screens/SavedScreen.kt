@@ -52,17 +52,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.model.AppLanguage
 import com.example.model.NewsArticle
 import com.example.model.NewsCategory
 import com.example.model.ReadingDensity
 import com.example.ui.components.CompactStoryCard
 import com.example.ui.components.MagazineStoryCard
 import com.example.ui.theme.VartaSaffron
+import com.example.util.VartaStrings
 
 @Composable
 fun SavedScreen(
     savedArticles: List<NewsArticle>,
     readingDensity: ReadingDensity,
+    language: AppLanguage = AppLanguage.ENGLISH,
     onArticleClick: (NewsArticle) -> Unit,
     onBookmarkToggle: (NewsArticle) -> Unit,
     onShare: (NewsArticle) -> Unit,
@@ -89,7 +92,7 @@ fun SavedScreen(
             onDismissRequest = { showClearDialog = false },
             title = {
                 Text(
-                    text = "Clear Archived Dispatches?",
+                    text = VartaStrings.clearArchivedTitle(language),
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontFamily = FontFamily.Serif,
                         fontWeight = FontWeight.Bold
@@ -98,7 +101,7 @@ fun SavedScreen(
             },
             text = {
                 Text(
-                    text = "This will remove all ${savedArticles.size} saved stories and their offline copies.",
+                    text = VartaStrings.clearArchivedDescription(language),
                     style = MaterialTheme.typography.bodyMedium
                 )
             },
@@ -110,12 +113,12 @@ fun SavedScreen(
                     },
                     colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFFE53935))
                 ) {
-                    Text("Clear All", fontWeight = FontWeight.Bold)
+                    Text(VartaStrings.clear(language), fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showClearDialog = false }) {
-                    Text("Cancel")
+                    Text(VartaStrings.cancel(language))
                 }
             }
         )
@@ -136,7 +139,7 @@ fun SavedScreen(
         ) {
             Column(modifier = Modifier.weight(1f, fill = false)) {
                 Text(
-                    text = "ARCHIVED DISPATCHES",
+                    text = VartaStrings.archivedDispatches(language),
                     style = MaterialTheme.typography.labelSmall.copy(
                         letterSpacing = 1.5.sp,
                         fontWeight = FontWeight.Bold
@@ -146,7 +149,7 @@ fun SavedScreen(
                     overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                 )
                 Text(
-                    text = if (savedArticles.isNotEmpty()) "${savedArticles.size} Stories • ~$totalReadMinutes min read" else "No Saved Stories",
+                    text = if (savedArticles.isNotEmpty()) "${savedArticles.size} Stories • ~$totalReadMinutes min read" else VartaStrings.noSavedStories(language),
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontFamily = FontFamily.Serif
                     ),
@@ -265,7 +268,7 @@ fun SavedScreen(
                                 }
                         ) {
                             Text(
-                                text = "${cat.title} ($count)",
+                                text = "${cat.getLocalizedTitle(language)} ($count)",
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
                                 ),
@@ -293,7 +296,7 @@ fun SavedScreen(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "No saved dispatches",
+                        text = VartaStrings.noSavedStories(language),
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontFamily = FontFamily.Serif,
                             fontWeight = FontWeight.Medium
@@ -302,7 +305,7 @@ fun SavedScreen(
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
-                        text = "Tap the bookmark icon on any live story to read it later offline.",
+                        text = VartaStrings.noSavedStoriesDescription(language),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center

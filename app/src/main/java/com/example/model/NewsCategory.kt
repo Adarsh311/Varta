@@ -97,8 +97,16 @@ enum class NewsCategory(
 
     val feedUrl: String get() = feedUrls.first()
 
+    fun getFeedUrls(language: AppLanguage = AppLanguage.ENGLISH): List<String> {
+        return feedUrls
+    }
+
+    fun getLocalizedTitle(language: AppLanguage): String {
+        return if (language == AppLanguage.HINDI) hindiTitle else title
+    }
+
     companion object {
-        fun searchUrl(query: String): String {
+        fun searchUrl(query: String, language: AppLanguage = AppLanguage.ENGLISH): String {
             val encodedQuery = URLEncoder.encode(query.trim(), "UTF-8")
             return "https://news.google.com/rss/search?q=$encodedQuery&hl=en-IN&gl=IN&ceid=IN:en"
         }
