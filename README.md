@@ -252,7 +252,7 @@ Typography pairs a **serif** display face for headlines and body copy with a **s
 
 **THE VĀRTA DISPATCH** is a static, broadsheet-styled web edition of Vārta — same masthead, same dual light/dark "Newsprint ⇄ Midnight Press" palette, built with plain HTML/CSS/JS in [`website/`](./website).
 
-**Live site:** `\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_` <!-- add your deployed website URL here -->
+**Live site:** https://newsvarta.netlify.app/ <!-- add your deployed website URL here -->
 
 To run it locally, just open [`website/index.html`](./website/index.html) in a browser, or serve the folder with any static host (GitHub Pages, Netlify, Vercel).
 
