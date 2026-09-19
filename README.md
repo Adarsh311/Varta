@@ -1,22 +1,22 @@
 <div align="center">
 
-<img src="app/src/main/res/drawable/ic_varta_logo.jpg" width="112" alt="Vārta logo" />
+<img src="app/src/main/res/drawable/ic_varta_logo.jpg" width="108" style="border-radius:20px" alt="Vārta logo" />
 
 # Vārta
+### वार्ता — *The news, distilled.*
 
-### *The news, distilled.*
-
-An ultra-premium, editorial-style Indian news reader for Android — live multi-source RSS aggregation, full article extraction, and a distraction-free reading experience wrapped in a dark-luxury, magazine-grade interface.
-
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.2.10-7F52FF?style=flat-square&logo=kotlin&logoColor=white)](https://kotlinlang.org)
-[![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-Material%203-4285F4?style=flat-square&logo=jetpackcompose&logoColor=white)](https://developer.android.com/jetpack/compose)
-[![Min SDK](https://img.shields.io/badge/Min%20SDK-24-3DDC84?style=flat-square&logo=android&logoColor=white)](https://developer.android.com/tools/releases/platforms)
-[![Target SDK](https://img.shields.io/badge/Target%20SDK-36-3DDC84?style=flat-square&logo=android&logoColor=white)](https://developer.android.com/tools/releases/platforms)
-[![License](https://img.shields.io/badge/License-Unspecified-lightgrey?style=flat-square)](#license)
+**A native Android news reader, reborn as an editorial product.**
+Live multi-source RSS aggregation · full-article extraction · a distraction-free, newsprint-grade reading experience — plus a matching broadsheet-style companion website.
 
 <br />
 
-<img src="app/src/main/res/drawable/ic_varta_logo.jpg" width="1" height="1" alt="" />
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.2.10-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)](https://kotlinlang.org)
+[![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-Material%203-4285F4?style=for-the-badge&logo=jetpackcompose&logoColor=white)](https://developer.android.com/jetpack/compose)
+[![Min SDK](https://img.shields.io/badge/Min%20SDK-23-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://developer.android.com/tools/releases/platforms)
+[![Target SDK](https://img.shields.io/badge/Target%20SDK-36-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://developer.android.com/tools/releases/platforms)
+[![License](https://img.shields.io/badge/License-Unspecified-lightgrey?style=for-the-badge)](#license)
+
+**[⬇ Download the APK](./varta.apk)** &nbsp;·&nbsp; **[🌐 Visit the website](#-companion-website)** &nbsp;·&nbsp; **[📱 Get Started](#-getting-started)**
 
 </div>
 
@@ -32,6 +32,8 @@ An ultra-premium, editorial-style Indian news reader for Android — live multi-
 - [How It Works](#how-it-works)
 - [News Categories](#news-categories)
 - [Design Language](#design-language)
+- [Companion Website](#-companion-website)
+- [Download the APK](#-download-the-apk)
 - [Getting Started](#getting-started)
 - [Project Structure](#project-structure)
 - [Roadmap](#roadmap)
@@ -42,44 +44,50 @@ An ultra-premium, editorial-style Indian news reader for Android — live multi-
 
 ## Overview
 
-**Vārta** (वार्ता — "discourse" or "news" in Sanskrit/Hindi) is a native Android news reader built entirely with **Jetpack Compose**. It pulls live headlines from multiple trusted Indian publishers in parallel, de-duplicates and merges them into a single resilient feed, then re-fetches and cleans the *full* article body — hero image, author, publish date, and readable paragraphs — so you read a clean, ad-free, editorial layout instead of a cluttered mobile website.
+**Vārta** (वार्ता — "discourse" or "news" in Sanskrit/Hindi) is a native Android news reader built end-to-end in **Jetpack Compose**. It pulls live headlines from multiple trusted Indian publishers in parallel, de-duplicates and merges them into a single resilient feed, then re-fetches and cleans the *full* article body — hero image, byline, publish date, and readable paragraphs — so you read a clean, ad-free, letterpress-style layout instead of a cluttered mobile website.
 
-It isn't a wrapper around a single API. It's a small, self-healing news pipeline: if one publisher's feed goes down, is rate-limited, or throws up a bot-detection wall, Vārta silently falls back to the next source, a JSON proxy, or a generated editorial summary — so the feed rarely feels empty.
+It isn't a thin wrapper around one API. It's a small, self-healing news pipeline: if a publisher's feed goes down, gets rate-limited, or throws up a bot-detection wall, Vārta silently falls back to the next source, a JSON proxy, or a clearly-labeled editorial summary — so the feed rarely feels empty, and a broken source never breaks the UI.
 
 <br />
 
 ## Features
 
-**Reading experience**
-- 🗞️ **Full article extraction** — scrapes and cleans the source publisher's page (hero image, byline, date, body copy) instead of showing a truncated RSS snippet
-- 📖 **Two reading densities** — toggle between an immersive *Magazine* layout and a dense *Compact* list
-- ⏱️ **Estimated read time** and **auto-generated key highlights** on every article
-- 🌗 **Dark-luxury & warm-light themes**, both custom-built editorial palettes (not default Material colors)
-- 🔖 **Save for later** — bookmark stories to a local on-device library you can revisit anytime
-- 🔍 **Live search** across Google News' full index, not just cached categories
-- 📤 **Native share sheet** integration for any article
+**📰 Reading experience**
+- **Full article extraction** — scrapes and cleans the source publisher's page (hero image, byline, date, body copy) instead of a truncated RSS snippet
+- **Two feed densities** — an immersive *Magazine* layout and a dense *Compact* list
+- **Estimated read time** and auto-generated key highlights on every article
+- **Listen to any article** — on-device text-to-speech reads the full piece aloud, with play / pause / resume and adjustable narration speed
+- **In-reader typography controls** — three text sizes (Compact · Standard · Comfort) and a Serif/Sans font toggle, tuned live while you read
+- **Save for later** — bookmark stories to a local, on-device Room library
+- **Live search** across Google News' full index, not just cached categories
+- **Native share sheet** integration for any article
 
-**Data & reliability**
-- 📡 **Multi-source aggregation** — every category merges feeds from The Times of India, The Hindu, NDTV, and Google News, de-duplicated by normalized headline
-- 🧭 **Google News redirect decoding** — resolves obfuscated `news.google.com` article links back to the real publisher URL via Google's internal batch-execute endpoint
-- 🛡️ **Bot-wall & WAF detection** — recognizes Cloudflare/PerimeterX/Akamai challenge pages and gracefully falls back instead of rendering garbage
-- 🔁 **Three-tier fallback chain** — direct RSS/XML → JSON proxy → clean editorial fallback, so a feed failure never breaks the UI
-- 🆕 **Live "new stories" banner** — background polling surfaces fresh headlines without yanking your scroll position
-- 💾 **Room-backed local persistence** for your saved reading list
+**🔔 Notifications & freshness**
+- **Breaking-news push notifications** — a periodic `WorkManager` background job checks Top Stories/India and notifies you of new breaking headlines, complete with a user-facing on/off toggle and a test-notification action
+- **Live "new stories" banner** — foreground polling surfaces fresh headlines without yanking your scroll position
+
+**🎨 Personalization**
+- **Dark & light editorial themes** — two fully custom, non-default palettes ("Midnight Press" and "Newsprint"), not stock Material colors
+
+**📡 Data & reliability**
+- **Multi-source aggregation** — every category merges feeds from The Times of India, The Hindu, NDTV, and Google News, de-duplicated by normalized headline
+- **Google News redirect decoding** — resolves obfuscated `news.google.com` article links back to the real publisher URL via Google's internal batch-execute endpoint
+- **Bot-wall & WAF detection** — recognizes Cloudflare / PerimeterX / Akamai challenge pages and gracefully falls back instead of rendering garbage
+- **Three-tier fallback chain** — direct RSS/XML → `rss2json` proxy → clean editorial fallback, so a single feed failure never breaks the feed
+- **Room-backed local persistence** for your saved reading list
 
 <br />
 
 ## Screenshots
 
 <div align="center">
-<!--
-  Add screenshots or a screen-recording GIF here once available, e.g.:
 
-  <img src="docs/screenshots/feed-dark.png" width="220" />
-  <img src="docs/screenshots/article-dark.png" width="220" />
-  <img src="docs/screenshots/feed-light.png" width="220" />
--->
-<i>Screenshots coming soon — capture the Feed, Full Article, Search, and Saved screens in both themes to showcase the editorial UI here.</i>
+<img src="docs/screenshots/feed-india.png" width="230" alt="India category feed" />&nbsp;&nbsp;
+<img src="docs/screenshots/full-article.png" width="230" alt="Full article reader with listen &amp; font controls" />&nbsp;&nbsp;
+<img src="docs/screenshots/search-index.png" width="230" alt="Search with recent &amp; trending topics" />
+
+*Category feed · Full-article reader with Listen and Serif/Sans font controls · Search with recent & trending topics*
+
 </div>
 
 <br />
@@ -92,12 +100,14 @@ It isn't a wrapper around a single API. It's a small, self-healing news pipeline
 | **UI Toolkit** | [Jetpack Compose](https://developer.android.com/jetpack/compose) + Material 3 |
 | **Architecture** | MVVM — `ViewModel` + unidirectional `StateFlow` |
 | **Networking** | [OkHttp](https://square.github.io/okhttp/), [Retrofit](https://square.github.io/retrofit/), custom RSS/XML parser |
-| **HTML Parsing** | [Jsoup](https://jsoup.org/) — publisher page scraping & hero-image/JSON-LD extraction |
+| **HTML Parsing** | [Jsoup](https://jsoup.org/) — publisher page scraping & OpenGraph/JSON-LD extraction |
 | **Local Storage** | [Room](https://developer.android.com/training/data-storage/room) — bookmarked article persistence |
 | **JSON** | [Moshi](https://github.com/square/moshi) with KSP codegen |
 | **Image Loading** | [Coil](https://coil-kt.github.io/coil/) |
+| **Background Work** | [WorkManager](https://developer.android.com/topic/libraries/architecture/workmanager) — periodic breaking-news checks |
+| **Speech** | Android `TextToSpeech` — on-device article read-aloud |
 | **Async** | Kotlin Coroutines & `Flow` |
-| **Cloud (scaffolded)** | Firebase (App Check, AI SDK) — provisioned for future Gemini-powered features |
+| **Cloud (scaffolded)** | Firebase (App Check, Auth, Firestore, AI SDK) — provisioned for future Gemini-powered features |
 | **Build** | Gradle Kotlin DSL, AGP 9.1.1, KSP |
 
 <br />
@@ -125,6 +135,8 @@ flowchart TD
         FeedSvc["NewsFeedService<br/>(RSS + rss2json fallback)"]
         ScrapeSvc["ArticleScraperService<br/>(Jsoup extraction)"]
         Decoder["GoogleNewsUrlDecoder<br/>(batchexecute RPC)"]
+        Speech["ArticleSpeechHelper<br/>(TextToSpeech)"]
+        Worker["VartaBackgroundWorker<br/>(WorkManager)"]
         DB[("Room Database<br/>Bookmarked Articles")]
     end
 
@@ -137,10 +149,12 @@ flowchart TD
     Search --> VM
     Saved --> VM
     Article --> VM
+    Article --> Speech
     VM --> Repo
     Repo --> FeedSvc
     Repo --> ScrapeSvc
     Repo --> DB
+    Worker --> FeedSvc
     ScrapeSvc --> Decoder
     FeedSvc --> RSS
     Decoder --> Web
@@ -156,7 +170,7 @@ flowchart TD
 3. **Resolve** — when a headline links through `news.google.com`, the decoder replays Google's internal signed batch-execute call to recover the real publisher URL.
 4. **Scrape** — on open, `ArticleScraperService` fetches the publisher page with a realistic browser fingerprint, parses OpenGraph/Twitter/JSON-LD metadata for the hero image, byline, and body, and strips boilerplate.
 5. **Fall back gracefully** — if a fetch is blocked by a bot wall or fails outright, Vārta builds a clean, clearly-labeled editorial summary from the RSS description instead of showing an error screen.
-6. **Stay fresh** — a background loop checks for new stories every few minutes and surfaces a non-intrusive "new stories" banner rather than auto-scrolling you away from what you're reading.
+6. **Stay fresh** — a foreground polling loop surfaces a non-intrusive "new stories" banner, while a background `WorkManager` job checks periodically and raises a system notification for genuinely new breaking stories.
 
 <br />
 
@@ -179,38 +193,63 @@ Plus free-text **search** across Google News' full index.
 
 ## Design Language
 
-Vārta's UI is built as a genuine editorial product — serif display type for headlines, sans-serif for UI chrome, and two fully custom, non-default Material palettes.
+Vārta is built as a genuine editorial product — a "letterpress" identity shared across the app and its companion website, not a default Material theme.
 
 <table>
 <tr>
 <td valign="top" width="50%">
 
-**Dark — "Editorial Luxury"**
+**🌙 Dark — "Midnight Press"**
 
 | | Hex |
 |---|---|
-| ![#0B0B0C](https://placehold.co/14x14/0B0B0C/0B0B0C.png) Charcoal | `#0B0B0C` |
-| ![#19191E](https://placehold.co/14x14/19191E/19191E.png) Card | `#19191E` |
-| ![#F5F1E8](https://placehold.co/14x14/F5F1E8/F5F1E8.png) Ivory | `#F5F1E8` |
-| ![#C9862E](https://placehold.co/14x14/C9862E/C9862E.png) Saffron | `#C9862E` |
+| ![#0F0F12](https://placehold.co/14x14/0F0F12/0F0F12.png) Midnight ink | `#0F0F12` |
+| ![#1F1F28](https://placehold.co/14x14/1F1F28/1F1F28.png) Card | `#1F1F28` |
+| ![#F4EFE6](https://placehold.co/14x14/F4EFE6/F4EFE6.png) Newsprint ivory | `#F4EFE6` |
+| ![#DCA148](https://placehold.co/14x14/DCA148/DCA148.png) Saffron | `#DCA148` |
+| ![#D94848](https://placehold.co/14x14/D94848/D94848.png) Press red | `#D94848` |
 
 </td>
 <td valign="top" width="50%">
 
-**Light — "Warm Editorial"**
+**☀️ Light — "Newsprint"**
 
 | | Hex |
 |---|---|
-| ![#FAF7F0](https://placehold.co/14x14/FAF7F0/FAF7F0.png) Cream | `#FAF7F0` |
-| ![#F3EFE6](https://placehold.co/14x14/F3EFE6/F3EFE6.png) Card | `#F3EFE6` |
-| ![#121214](https://placehold.co/14x14/121214/121214.png) Ink | `#121214` |
-| ![#B57321](https://placehold.co/14x14/B57321/B57321.png) Saffron Deep | `#B57321` |
+| ![#F7F4EC](https://placehold.co/14x14/F7F4EC/F7F4EC.png) Parchment | `#F7F4EC` |
+| ![#EFE9DD](https://placehold.co/14x14/EFE9DD/EFE9DD.png) Card | `#EFE9DD` |
+| ![#131211](https://placehold.co/14x14/131211/131211.png) Letterpress ink | `#131211` |
+| ![#B8621B](https://placehold.co/14x14/B8621B/B8621B.png) Ochre | `#B8621B` |
+| ![#9E2A2B](https://placehold.co/14x14/9E2A2B/9E2A2B.png) Vermilion | `#9E2A2B` |
 
 </td>
 </tr>
 </table>
 
-Typography pairs a **serif display face** for headlines and body copy with a **sans-serif** for labels, tabs, and metadata — a deliberate nod to print newspaper hierarchy.
+Typography pairs a **serif** display face for headlines and body copy with a **sans-serif** for labels, tabs, and metadata — a deliberate nod to print-newspaper hierarchy. In-app, readers can toggle between Serif and Sans and step through three text sizes; the companion website layers on **Playfair Display**, **Merriweather**, and **Rozha One** (Devanagari) alongside **Inter** for a true broadsheet feel.
+
+<br />
+
+## 🌐 Companion Website
+
+**THE VĀRTA DISPATCH** is a static, broadsheet-styled web edition of Vārta — same masthead, same dual light/dark "Newsprint ⇄ Midnight Press" palette, built with plain HTML/CSS/JS in [`website/`](./website).
+
+**Live site:** `\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_` <!-- add your deployed website URL here -->
+
+To run it locally, just open [`website/index.html`](./website/index.html) in a browser, or serve the folder with any static host (GitHub Pages, Netlify, Vercel).
+
+<br />
+
+## 📥 Download the APK
+
+A signed, ready-to-install build ships in the repo for quick sideloading — no build step required:
+
+| | |
+|---|---|
+| **App APK** | [`varta.apk`](./varta.apk) |
+| **Website mirror** | [`website/varta.apk`](./website/varta.apk) |
+
+Enable **Install from unknown sources** on your Android device, transfer the APK, and tap to install. Requires **Android 6.0 (API 23)** or higher.
 
 <br />
 
@@ -220,7 +259,7 @@ Typography pairs a **serif display face** for headlines and body copy with a **s
 
 - [Android Studio](https://developer.android.com/studio) (Ladybug or newer recommended)
 - JDK 11+
-- An Android device or emulator running **API 24 (Android 7.0)** or higher
+- An Android device or emulator running **API 23 (Android 6.0)** or higher
 
 ### Clone & Open
 
@@ -249,10 +288,6 @@ cp .env.example .env
 
 Or press **Run ▶** in Android Studio with a connected device/emulator selected.
 
-### Try the prebuilt APK
-
-A release build (`varta.apk`) is included at the repo root for quick sideloading — enable *Install from unknown sources* on your device to try it without building from source.
-
 <br />
 
 ## Project Structure
@@ -265,8 +300,8 @@ V-rta/
 │       ├── VartaApp.kt
 │       ├── data/
 │       │   ├── NewsRepository.kt
-│       │   └── local/              # Room database, DAO, entities
-│       ├── model/                  # NewsArticle, NewsCategory, ScrapedArticle…
+│       │   └── local/                      # Room database, DAO, entities
+│       ├── model/                          # NewsArticle, NewsCategory, ScrapedArticle…
 │       ├── network/
 │       │   ├── NewsFeedService.kt          # RSS + JSON proxy fetching
 │       │   ├── ArticleScraperService.kt    # Full-article extraction
@@ -275,10 +310,17 @@ V-rta/
 │       ├── ui/
 │       │   ├── NewsViewModel.kt
 │       │   ├── VartaAppScreen.kt
-│       │   ├── components/         # Story cards, masthead, skeleton loaders
-│       │   ├── screens/            # Feed, Search, Saved, Full Article
-│       │   └── theme/              # Color, Type, Theme
-│       └── util/                   # Date, image, and text helpers
+│       │   ├── components/                 # Story cards, preview sheet, notification dialog, skeletons
+│       │   ├── screens/                    # Feed, Search, Saved, Full Article
+│       │   └── theme/                      # Color, Type, Theme
+│       ├── util/                           # Date, image, TTS, notification helpers
+│       └── worker/
+│           └── VartaBackgroundWorker.kt    # Periodic breaking-news check
+├── website/                                # Static broadsheet-style companion web edition
+│   ├── index.html
+│   ├── styles.css
+│   ├── app.js
+│   └── varta.apk
 ├── build.gradle.kts
 ├── settings.gradle.kts
 └── varta.apk
@@ -290,11 +332,11 @@ V-rta/
 
 Ideas for future iterations:
 
-- [ ] Push notifications for breaking stories
 - [ ] Home-screen widget with top headlines
-- [ ] Offline caching of full article bodies (not just bookmarks metadata)
+- [ ] Offline caching of full article bodies (not just bookmark metadata)
 - [ ] Gemini-powered summarization, using the already-provisioned Firebase AI setup
 - [ ] Additional regional-language sources
+- [ ] Deploy and link the companion website publicly
 
 <br />
 
